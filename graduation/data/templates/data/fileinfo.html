@@ -1,0 +1,315 @@
+{% extends "data/base.html" %}
+{% block content %}
+    <div class="tpl-content-wrapper">
+
+
+        <div class="row-content am-cf">
+
+            <div class="row">
+
+                <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+                    <div class="widget am-cf">
+
+                        <div class="widget-head am-cf">
+                            <div class="widget-title am-fl"><i class="am-icon-arrow-circle-left am-icon-sm"></i> <a
+                                    href="/data/manage/" style="color:#838FA1">返回</a></div>
+
+
+
+                            <div class="widget-function am-fr">
+                                {#                                <a href="javascript:;" class="am-icon-cog"></a>#}
+                            </div>
+                        </div>
+
+                        <div class="am-g">
+
+                            <div class="am-u-sm-4" style="padding: 8px 40px"><div class="widget-title am-fl"><i class="am-icon-plus-square "></i> <a
+                                    href="javascript:;" id="add_data" style="color:#838FA1">添加数据</a></div></div>
+
+
+                        </div>
+
+
+                        <div class="widget-body  am-fr">
+                            <div class="am-u-sm-12">
+                                <div class="am-scrollable-horizontal am-scrollable-vertical">
+                                    <table width="100%"
+                                           class="am-table am-table-compact am-table-bordered tpl-table-black am-text-nowrap am-table-hover"
+                                           id="tablexzx">
+                                        <tr>
+                                            {% for title in label %}
+                                                <th>{{ title }}</th>
+                                            {% endfor %}
+                                            <th>操作</th>
+                                        </tr>
+                                        {% for data in tables %}
+                                            <tr>
+                                                {% for i in data %}
+                                                    <td>{{ i }}</td>
+                                                {% endfor %}
+                                                <td>
+                                                    <div class="tpl-table-black-operation">
+                                                        {#                                                        "/data/change?row={{ forloop.counter0 }}&id={{ fileid }}"#}
+                                                        {#                                                        <a href="/data/change?row={{ forloop.counter0 }}&id={{ fileid }}" id='doc-prompt-toggle'>#}
+                                                        <a href="javascript:;" class="changeline"
+                                                           row="{{ forloop.counter0 }}">
+                                                            <i class="am-icon-pencil"></i> 编辑
+                                                        </a>
+                                                        {#                                                        </a>#}
+                                                        <a href="/data/change_del?id={{ fileid }}&row={{ forloop.counter0 }}"
+                                                           class="tpl-table-black-operation-del ">
+                                                            <i class="am-icon-trash"></i> 删除
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+{% endblock content %}
+
+{% block script_or_other %}
+    {% if messages %}
+        <script>
+            {% for msg in messages %}
+                alert('{{ msg.message }}');
+            {% endfor %}
+        </script>
+    {% endif %}
+
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">修改数据</div>
+            <div class="am-modal-bd">
+
+                <br>
+                <table class="am-table ">
+                    {% for title in label %}
+                        <tr>
+                            <td>{{ title }}</td>
+                            <td><input name="change" type="text" class="am-modal-prompt-input"></td>
+                        </tr>
+                    {% endfor %}
+                </table>
+
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt2">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">添加数据</div>
+            <div class="am-modal-bd">
+
+                <br>
+                <table class="am-table ">
+                    {% for title in label %}
+                        <tr>
+                            <td>{{ title }}</td>
+                            <td><input  type="text" class="am-modal-prompt-input"></td>
+                        </tr>
+                    {% endfor %}
+                </table>
+
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+
+    {% csrf_token %}
+    <script type="text/javascript">
+        function bind(obj, eventStr, callback) {
+            if (obj.addEventListener) {
+                //大部分浏览器兼容的方式
+                obj.addEventListener(eventStr, callback, false);
+            } else {
+                /*
+                 * this是谁由调用方式决定
+                 * callback.call(obj)
+                 */
+                //IE8及以下
+                obj.attachEvent("on" + eventStr, function () {
+                    //在匿名函数中调用回调函数
+                    callback.call(obj);
+                });
+            }
+        }
+
+        window.onload = function () {
+            $('#data_flag').attr('class','active')
+            document.documentElement.style.overflow='hidden';
+            var a01 = document.getElementsByClassName("changeline");
+            var labely = {{ label_type | safe }};
+
+            for (var i = 0; i < a01.length; i++) {
+                var b0 = a01[i];
+                b0.index = i;
+                bind(b0, "click", function () {
+                    var row = Number(this.index)
+                    $("input[name='change']").each(function (j,n){
+                        $(this).attr('value','')
+                    })
+
+                    $('#my-prompt').modal({
+                        relatedTarget: this,
+                        onConfirm: function (e) {
+                            var datax = String(e.data);
+                            var temp = datax.split(",");
+                            var flag = 1;
+                            var flagx = 1;
+                            for (i = 0; i < temp.length; i++) {
+                                if (temp[i].length == 0) {
+                                    flag = 0;
+                                    break
+                                }
+                            }
+                            if (flag == 1) {
+                                for(var j=0;j<labely.length;j++){
+                                    if(labely[j] === 'object'){
+                                    }
+                                    else{
+                                        if(isNaN(Number(temp[j]))){
+                                            flagx = 0;
+                                            break
+                                        }
+                                    }
+
+                                }
+                                if(flagx == 1){
+                                    var id = {{ fileid }};
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: '/data/look_file/',
+                                        data: {
+                                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                            changes: datax,
+                                            id: id,
+                                            row: row
+                                        },
+                                        success: function (data) {
+                                            console.log('ajax post success')
+                                            location.reload();
+                                        },
+                                        error:function (XMLHttpRequest, textStatus, errorThrown){
+                                            console.log('ajax post error')
+                                            // 状态码
+                                            console.log('状态码:'+XMLHttpRequest.status);
+                                            // 状态
+                                            console.log("状态:"+XMLHttpRequest.readyState);
+                                            // 错误信息
+                                            console.log("错误信息:"+textStatus);
+                                        }
+                                    })
+                                }
+                                else{
+                                    alert('有数据类型不一致')
+                                }
+
+                            } else {
+                                alert('不能有数据为空')
+                            }
+
+                        },
+                        onCancel: function () {
+                        }
+
+                    });
+
+
+                })
+            }
+
+            var b02 = document.getElementById('add_data');
+            bind(b02, "click", function () {
+                $('#my-prompt2').modal({
+                    relatedTarget: this,
+                    onConfirm: function (e) {
+                        var datax = String(e.data);
+                        var temp = datax.split(",");
+                        var flag = 1;
+                        var flagx = 1;
+                        for (i = 0; i < temp.length; i++) {
+                            if (temp[i].length == 0) {
+                                flag = 0;
+                                break
+                            }
+                        }
+                        if (flag == 1) {
+                            for(var j=0;j<labely.length;j++){
+                                if(labely[j] === 'object'){
+                                }
+                                else{
+                                    if(isNaN(Number(temp[j]))){
+                                        flagx = 0;
+                                        break
+                                    }
+                                }
+                            }
+                            if(flagx == 1){
+                                var id = {{ fileid }};
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '/data/change_add/',
+                                    data: {
+                                        csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                        changes: datax,
+                                        id: id,
+                                    },
+                                    success: function (data) {
+                                        console.log('ajax post success')
+                                        location.reload();
+                                    },
+                                    error:function (XMLHttpRequest, textStatus, errorThrown){
+                                        console.log('ajax post error')
+                                        // 状态码
+                                        console.log('状态码:'+XMLHttpRequest.status);
+                                        // 状态
+                                        console.log("状态:"+XMLHttpRequest.readyState);
+                                        // 错误信息
+                                        console.log("错误信息:"+textStatus);
+                                    }
+                                })
+                            }
+                            else{
+                                alert('有数据类型不一致')
+                            }
+
+                        } else {
+                            alert('不能有数据为空')
+                        }
+
+                    },
+                    onCancel: function () {
+                    }
+
+                });
+
+
+            })
+
+
+        }
+    </script>
+{% endblock script_or_other %}
+
+

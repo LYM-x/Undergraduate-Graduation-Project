@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 首先打开平台代码。
 修改数据库信息：在根文件目录/graduation/settings.py文件中修改
 （可选，创建管理员账号）然后在命令行的根文件目录下输入：python manage.py createsuperuser
 运行python manage.py makemigrations
 运行python manage.py migrate
 运行平台python manage.py runserver
+=======
+首先打开平台代码。
+修改数据库信息：在根文件目录/graduation/settings.py文件中修改
+（可选，创建管理员账号）然后在命令行的根文件目录下输入：python manage.py createsuperuser
+运行python manage.py makemigrations
+运行python manage.py migrate
+运行平台python manage.py runserver
+>>>>>>> 054a6c3 (毕设设计代码)
 即可进入平台，首页可注册普通账号

@@ -1,0 +1,446 @@
+{% extends 'model/base.html' %}
+{% block headadd %}
+    <script src="/static/view/js/echarts.min.js"></script>
+    <script src="/static/view/js/dataTool.js"></script>
+{% endblock headadd %}
+{% block content %}
+    <div class="tpl-content-wrapper">
+        <div class="row-content am-cf" id="piclist">
+
+            <div class="row am-cf" >
+                <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+                    <div class="widget am-cf">
+
+                        <div class="widget-head am-cf">
+                            <div class="widget-title am-fl">实验页面</div>
+                            <div class="widget-function am-fr">
+                                <div class="am-dropdown" data-am-dropdown>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="widget-body  am-fr">
+                            {#                        搜索框#}
+                            <div class="am-u-sm-12 am-u-md-offset-0 am-u-lg-6">
+                                <div class="am-btn-toolbar">
+                                    <div class="am-btn-group am-btn-group-xs">
+                                        <button class="am-btn am-btn-default am-btn-success" id="view_ex"> 扩展可视化
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="am-u-sm-12 am-u-md-6 am-u-lg-3" style="float: right">
+                                <div class="am-form-group tpl-table-list-select">
+                                    <select data-am-selected="{btnSize: 'sm',maxHeight: 100,searchBox: 1}"
+                                            onchange="javascript:location.href=this.value;">
+                                        <optgroup label="other">
+                                            <option value="/model/models/?fid=-1">所有模型</option>
+                                            <option value="/model/models/">返回</option>
+                                        </optgroup>
+                                        <optgroup label="Lstm">
+                                            {% for ex in models %}
+                                                {% if ex.model_class == 'lstm' %}
+                                                    <option value="/model/models/?fid={{ ex.id }}">{{ ex.model_name }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </optgroup>
+                                        <optgroup label="GCN_lstm">
+                                            {% for ex in models %}
+                                                {% if ex.model_class == 'GCN_lstm' %}
+                                                    <option value="/model/models/?fid={{ ex.id }}">{{ ex.model_name }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </optgroup>
+                                        <optgroup label="Transformer">
+                                            {% for ex in models %}
+                                                {% if ex.model_class == 'transformer' %}
+                                                    <option value="/model/models/?fid={{ ex.id }}">{{ ex.model_name }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </optgroup>
+                                        <optgroup label="ConvNext_lstm">
+                                            {% for ex in models %}
+                                                {% if ex.model_class == 'ConvNext_lstm' %}
+                                                    <option value="/model/models/?fid={{ ex.id }}">{{ ex.model_name }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </optgroup>
+
+
+                                    </select>
+                                </div>
+                            </div>
+                            {#                            模型表格#}
+                            <div class="am-u-sm-12">
+                                <div class="am-scrollable-horizontal am-scrollable-vertical">
+                                    <table width="100%"
+                                           class="am-table am-table-compact am-table-striped tpl-table-black am-text-nowrap am-table-hover"
+                                           id="example-r" >
+                                        <thead>
+                                        <tr>
+                                            <th>模型名称</th>
+                                            <th>模型类别</th>
+                                            <th>操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody style="max-height:300px;overflow-y: scroll;display: table-row-group">
+
+                                        {% for file in models %}
+                                            <tr class="gradeX">
+                                                <td>{{ file.model_name }}</td>
+                                                <td>{{ file.model_class }}</td>
+                                                <td>
+                                                    <div class="tpl-table-black-operation">
+                                                        <a href="javascript:;" class="pre_model" id="{{ file.id }}">
+                                                            <i class="am-icon-pencil"></i> 预测
+                                                        </a>
+                                                        {% if file.pre %}
+                                                            <a href="javascript:;" class="view" fid="{{ file.id }}" mname="{{ file.model_name }}">
+                                                                <i class="am-icon-pencil"></i> 预测可视化
+                                                            </a>
+                                                        {% endif %}
+                                                        <a href="/model/dels?delete={{ file.id }}"
+                                                           class="tpl-table-black-operation-del">
+                                                            <i class="am-icon-trash"></i> 删除
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+
+                                        <!-- more data -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+{% endblock content %}
+{% block script_or_other %}
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">选择模型类型</div>
+            <div class="am-modal-bd">
+                <br>
+                <table class="am-table">
+                    <tr>
+                        <td>
+                            <input type="radio" name="types" value="lstm" checked>
+                            Lstm
+                        </td>
+                        <td>
+                            <input type="radio" name="types" value="GCN_lstm" >
+                            GCN_lstm
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="radio" name="types" value="transformer" >
+                            Transformer
+                        </td>
+                        <td>
+                            <input type="radio" name="types" value="ConvNext_lstm" >
+                            ConvNext_lstm
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>实验名称</td>
+                        <td><input type="text" class="am-modal-prompt-input"></td>
+                    </tr>
+                </table>
+
+
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt2">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">选择预测结果</div>
+            <div class="am-modal-bd">
+                <br>
+                <table class="am-table">
+                    <tr>
+                        <td>选择</td>
+                        <td><select style="width: 100%" multiple data-am-selected="{maxHeight: 170}" id="select_data">
+                            <optgroup label="Lstm">
+                                {% for ex in models %}
+                                    {% if ex.model_class == 'lstm' and  ex.pre %}
+                                        <option value="{{ ex.id }}">{{ ex.model_name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="GCN_lstm">
+                                {% for ex in models %}
+                                    {% if ex.model_class == 'GCN_lstm'  and  ex.pre %}
+                                        <option value="{{ ex.id }}">{{ ex.model_name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="Transformer">
+                                {% for ex in models %}
+                                    {% if ex.model_class == 'transformer' and  ex.pre %}
+                                        <option value="{{ ex.id }}">{{ ex.model_name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="ConvNext_lstm">
+                                {% for ex in models %}
+                                    {% if ex.model_class == 'ConvNext_lstm' and  ex.pre %}
+                                        <option value="{{ ex.id }}">{{ ex.model_name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </optgroup>
+                        </select></td>
+                    </tr>
+                </table>
+
+
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt3">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-bd">
+                <div id="map_pre" style="width: 550px;height: 400px"></div>
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+            </div>
+        </div>
+    </div>
+
+    {% csrf_token %}
+    <script type="text/javascript">
+        function bind(obj, eventStr, callback) {
+            if (obj.addEventListener) {
+                //大部分浏览器兼容的方式
+                obj.addEventListener(eventStr, callback, false);
+            } else {
+                /*
+                 * this是谁由调用方式决定
+                 * callback.call(obj)
+                 */
+                //IE8及以下
+                obj.attachEvent("on" + eventStr, function () {
+                    //在匿名函数中调用回调函数
+                    callback.call(obj);
+                });
+            }
+        }
+
+        window.onload = function () {
+            $('#models_flag').attr('class','active');
+            document.documentElement.style.overflow='hidden';
+            var loadings = document.getElementsByClassName('btn-loading-example');
+            for(var i=0;i<loadings.length;i++){
+                var loading = loadings[i]
+                var idx = String(loading.getAttribute('exid'))
+                var ide = String(loading.getAttribute('id'))
+                var ch =  '#'+ide
+                console.log(ch)
+                var $btn = $(ch)
+                var trainx = Object({{ train | safe }});
+                console.log(trainx)
+                console.log(String(trainx[idx]))
+                if (String(trainx[idx])=='yes'){
+                    console.log(typeof trainx[idx])
+                    console.log('loading')
+                    $btn.button('loading');
+                }
+                else if(String(trainx[idx])=='done') {
+                    console.log(typeof trainx[idx])
+                    console.log('reset')
+                    $btn.button('reset');
+                }
+            }
+
+
+            var pre_models = document.getElementsByClassName('pre_model');
+            for(var i=0;i<pre_models.length;i++){
+                var b0 = pre_models[i];
+                b0.id = b0.getAttribute("id");
+                bind(b0, "click", function () {
+                    var id = this.id
+                    $.ajax({
+                        type: 'POST',
+                        url: '/model/models_back/',
+                        traditional:true,
+                        data: {
+                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                            mid:id,
+                        },
+                        success: function (data) {
+                            console.log('ajax post success')
+                            alert('预测已开始，稍等刷新即可查看结果');
+                            window.location.href = '/model/models';
+                        },
+                        error:function (XMLHttpRequest, textStatus, errorThrown){
+                            console.log('ajax post error')
+                            // 状态码
+                            console.log('状态码:'+XMLHttpRequest.status);
+                            // 状态
+                            console.log("状态:"+XMLHttpRequest.readyState);
+                            // 错误信息
+                            console.log("错误信息:"+textStatus);
+                        }
+                    })
+                })
+            }
+
+            var view_models = document.getElementsByClassName('view');
+            for(var i=0;i<view_models.length;i++){
+                var b0 = view_models[i];
+                b0.id = b0.getAttribute("fid");
+                b0.mname = b0.getAttribute("mname");
+                bind(b0, "click", function () {
+                    var id = this.id;
+                    console.log('id',id)
+                    var model_name = this.mname;
+                    var myChart = echarts.init(document.getElementById('map_pre'), 'white', {renderer: 'canvas'});
+                    myChart.resize();
+                    var datas = {{ dataset | safe }};
+                    var time = {{ xaxis | safe }}
+                    var dataset = datas[id];
+                    var xaixs = time[id]
+
+                    var preNs = {{ pren | safe }};
+                    var preN = preNs[id];
+                    console.log(xaixs);
+                    console.log('dataset:',dataset);
+                    var x = new Array(dataset.length)
+                    for (var j=0;j<x.length;j++){
+                        x[j] = [String(xaixs[j]),dataset[j]];}
+
+                    pre_data = x.slice(x.length-preN-1,x.length)
+                    data = x.slice(0,x.length-preN)
+                    var seriesm = []
+                    seriesm.push({
+                        data: pre_data,
+                        name:'data_pre',
+                        type: 'line',
+                    },)
+                    seriesm.push({
+                        data: data,
+                        name:'data',
+                        type: 'line',
+                    },)
+
+                    var option = {
+                        xAxis: {
+                            type: 'category',
+                            data:xaixs,
+                            splitLine: {
+                                show: true,
+                            },
+                        },
+                        yAxis: {
+                            type: 'value',
+                            splitLine: {
+                                show: true,
+                            },
+                        },
+                        series: seriesm,
+                        tooltip: {
+                            trigger: 'item',
+                            axisPointer: {
+                                type: 'shadow'
+                            },
+                            formatter: '数据来源：{a}<br/>值：{c0}<br/>时间：{b}'
+                        },
+                        legend: {
+                            orient: 'horizontal',  //'vertical'
+                            top:"6%"
+                        },
+                        dataZoom:[{
+                            type: 'slider',//图表下方的伸缩条
+                            show : true, //是否显示
+                            realtime : true, //拖动时，是否实时更新系列的视图
+                            start : 0, //伸缩条开始位置（1-100），可以随时更改
+                            end : 100, //伸缩条结束位置（1-100），可以随时更改
+                        },
+                            {type:'inside'}],
+                    };
+                    option && myChart.setOption(option);
+                    $('#my-prompt3').modal({
+                        relatedTarget: this,
+                        onConfirm: function (options) {
+                            // 基于准备好的dom，初始化echarts实例
+                        },
+                        onCancel: function (data) {
+                        }
+                    })
+                })
+            }
+
+
+
+            var addex = document.getElementById('view_ex');
+            bind(addex,'click',function (){
+                $('#my-prompt2').modal({
+                    relatedTarget: this,
+                    onConfirm: function (options) {
+                        var data_select = $("#select_data").val();
+                        console.log(data_select);  //['16', '18', '19']
+
+                        $.ajax({
+                            type: 'POST',
+                            url: '/view/pic/',
+                            traditional:true,
+                            data: {
+                                csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                exs_id:data_select,
+                            },
+                            success: function (data) {
+                                console.log('ajax post success')
+                                window.location.href = '/view/pic';
+                            },
+                            error:function (XMLHttpRequest, textStatus, errorThrown){
+                                console.log('ajax post error')
+                                // 状态码
+                                console.log('状态码:'+XMLHttpRequest.status);
+                                // 状态
+                                console.log("状态:"+XMLHttpRequest.readyState);
+                                // 错误信息
+                                console.log("错误信息:"+textStatus);
+                            }
+                        })
+
+
+                    },
+                    onCancel: function (data) {
+                    }
+                })
+
+            });
+
+
+
+        }
+    </script>
+{% endblock script_or_other %}
+
+
+
+
+
+
+
+
+
+
+
