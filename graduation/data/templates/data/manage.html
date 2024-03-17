@@ -1,0 +1,638 @@
+{% extends "data/base.html" %}
+{% block content %}
+    <div class="tpl-content-wrapper">
+        <div class="row-content am-cf">
+
+            <div class="row">
+
+                <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+                    <div class="widget am-cf">
+
+                        <div class="widget-head am-cf">
+                            <div class="widget-title am-fl">数据管理</div>
+                            <div class="widget-function am-fr">
+                                {#                                <a href="javascript:;" class="am-icon-cog"></a>#}
+                            </div>
+                        </div>
+                        <div class="widget-body  am-fr">
+                            <form method="post" action="/data/manage/" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="am-u-sm-12 am-u-md-offset-0 am-u-lg-6">
+                                    <div class="am-form-group am-form-file">
+                                        <div class="am-btn-toolbar">
+                                            <div class="am-btn-group am-btn-group-xs">
+                                                <button type="button" class="am-btn am-btn-default am-btn-success"><span
+                                                        class="am-icon-plus"></span> 新增
+                                                </button>
+                                                <input id="doc-form-file" type="file" name="newfile" multiple>
+
+                                                <div id="file-list"></div>
+                                                <script>
+                                                    $(function () {
+                                                        $('#doc-form-file').on('change', function () {
+                                                            var fileNames = '';
+                                                            $.each(this.files, function () {
+                                                                fileNames += '<span class="am-badge">' + this.name + '</span> ';
+                                                            });
+                                                            $('#file-list').html(fileNames);
+                                                        });
+                                                    });
+                                                </script>
+
+                                            </div>
+                                            <div class="am-btn-group am-btn-group-xs"><input type="submit"
+                                                                                             accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                                                                                             class="am-btn am-btn-default am-btn-success"
+                                                                                             value="提交" multiple></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if messages %}
+                                    <script>
+                                        {% for msg in messages %}
+                                            alert('{{ msg.message }}');
+                                        {% endfor %}
+                                    </script>
+                                {% endif %}
+
+                                <div class="am-u-sm-12 am-u-md-6 am-u-lg-3">
+                                    <div class="am-form-group tpl-table-list-select">
+                                        <select data-am-selected="{btnSize: 'sm',maxHeight: 100,searchBox: 1}"
+                                                onchange="javascript:location.href=this.value;">
+                                            <option value="/data/manage/?fid=-1">所有文件</option>
+                                            {% for file in files %}
+                                                <option value="/data/manage?fid={{ file.id }}">{{ file.name }}</option>
+                                            {% endfor %}
+                                            <option value="/data/manage/">返回</option>
+
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </form>
+
+                            <div class="am-u-sm-12">
+                                <div class="am-scrollable-horizontal am-scrollable-vertical">
+                                    <table width="100%"
+                                           class="am-table am-table-compact am-table-striped tpl-table-black am-text-nowrap am-table-hover"
+                                           id="example-r" >
+                                        <thead>
+                                        <tr>
+                                            <th>文件名称</th>
+                                            <th>上传时间</th>
+                                            <th>最近修改时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody style="max-height:300px;overflow-y: scroll;display: table-row-group">
+
+                                        {% for file in files %}
+                                            <tr class="gradeX">
+                                                <td>{{ file.name }}</td>
+                                                <td>{{ file.create_time }}</td>
+                                                <td>{{ file.change_time }}</td>
+                                                <td>
+                                                    <div class="tpl-table-black-operation">
+                                                        <a href="/data/look_file?fileid={{ file.id }}">
+                                                            <i class="am-icon-pencil"></i> 编辑/查看
+                                                        </a>
+                                                        <a href="javascript:;" class="view" fid="{{ file.id }}">
+                                                            <i class="am-icon-pencil"></i> 可视化
+                                                        </a>
+                                                        <a href="/data/del?delete={{ file.id }}"
+                                                           class="tpl-table-black-operation-del">
+                                                            <i class="am-icon-trash"></i> 删除
+                                                        </a>
+                                                        <a href="/data/down?down={{ file.id }}"
+                                                           class="tpl-table-black-operation">
+                                                            <i class="am-icon-download"></i> 下载
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+
+                                        <!-- more data -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block script_or_other %}
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">选择可视化数据</div>
+            <div class="am-modal-bd">
+                <table class="am-table">
+                    <tr>
+                        <td>
+                            <input type="radio" name="types" value="line" checked>
+                            折线图
+                        </td>
+                        <td>
+                            <input type="radio" name="types" value="bar" >
+                            柱状图
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="radio" name="types" value="bar_pile" >
+                            堆叠柱状图
+                        </td>
+                        <td>
+                            <input type="radio" name="types" value="pie" >
+                            饼图
+                        </td>
+
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="radio" name="types" value="pie_pile" >
+                            双层饼图
+                        </td>
+                        <td>
+                            <input type="radio" name="types" value="box" >
+                            箱线图
+                        </td>
+
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="radio" name="types" value="radar" >
+                            雷达图
+                        </td>
+                        <td>
+                             <input type="radio" name="types" value="3d_scatter" >
+                            三维散点图
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>图片名称</td>
+                        <td><input type="text" class="am-modal-prompt-input"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt-line_bar_pile_radar">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">选择数据</div>
+            <div class="am-modal-bd">
+                <table class="am-table" id="view_data">
+                    <tr>
+                        <td>
+                            <div class="am-form-group" id="X-axis">
+                                <label class="am-radio-inline">
+                                    x轴/维度列
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="am-form-group"  id="Y-axis">
+                                <label class="am-radio-inline">
+                                    数据列(可多选)
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script type="text/javascript">
+        function bind(obj, eventStr, callback) {
+            if (obj.addEventListener) {
+                //大部分浏览器兼容的方式
+                obj.addEventListener(eventStr, callback, false);
+            } else {
+                /*
+                 * this是谁由调用方式决定
+                 * callback.call(obj)
+                 */
+                //IE8及以下
+                obj.attachEvent("on" + eventStr, function () {
+                    //在匿名函数中调用回调函数
+                    callback.call(obj);
+                });
+            }
+        }
+
+
+
+        window.onload = function () {
+            $('#data_flag').attr('class','active');
+            document.documentElement.style.overflow='hidden';
+            var v01 = document.getElementsByClassName("view");
+            for (var i = 0; i < v01.length; i++) {
+                var b0 = v01[i];
+                b0.fid = b0.getAttribute("fid")
+                bind(b0, "click", function () {
+                    var fid = this.fid
+                    $('#my-prompt').modal({
+                        relatedTarget: this,
+                        onConfirm: function (options) {
+                            var pic_name = String(options.data);
+                             if (pic_name.length==0){
+                            alert('默认图片名称为:图片类型_文件名称');
+                                  pic_name=''
+                            }
+                            var type = document.getElementsByName('types')
+                            for (var j =0;j<type.length;j++) {
+                                if (type[j].checked) {
+                                    var name_type = type[j].value;
+                                }
+                            }
+                            if(name_type==='line' || name_type==='bar' || name_type==='radar' || name_type==='bar_pile'){
+                                $.get('/data/data_get', {file:fid},function (data,status){
+                                    if(status=='success'){
+                                        data = JSON.parse(data)['label'];
+                                        console.log(data);
+                                        $('#X-axis').html('<label class="am-radio-inline">\
+                                <span style="font-weight: bold">x轴/维度列:</span>\
+                            </label>')
+                                        $('#Y-axis').html('<label class="am-radio-inline">\
+                                <span style="font-weight: bold">数据列(可多选):<\span>\
+                            </label>')
+                                        for(var i=0;i<data.length;i++){
+                                            $('#X-axis').append('<label class="am-radio-inline">\
+                                <input type="radio" name="radio1" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                            </label>')
+                                            $('#Y-axis').append('<label class="am-checkbox-inline am-secondary">\
+                                <input type="checkbox" name="radio2" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                            </label>')
+                                        }
+                                        $('#my-prompt-line_bar_pile_radar').modal({
+                                            relatedTarget: this,
+                                            onConfirm: function (e) {
+                                                var X_axis = $("input[name=radio1]:checked").val();
+                                                var obj = document.getElementsByName("radio2");
+                                                var Y_axis = [];
+                                                var flag=0;
+                                                for (k in obj) {
+                                                    //判断复选框是否被选中
+                                                    if (obj[k].checked){
+                                                        //获取被选中的复选框的值
+                                                        var tmp = Number(obj[k].value);
+                                                        if (tmp==X_axis){
+                                                            flag=1;
+                                                        }
+                                                        Y_axis.push(tmp);
+                                                    }
+                                                }
+                                                console.log(X_axis);
+                                                console.log(Y_axis);
+                                                console.log(typeof Y_axis);
+                                                if (!X_axis || !Y_axis){
+                                                    alert('请选择列');
+                                                }
+                                                else if(flag==1){
+                                                    alert('维度序列和数据序列不能交叉');
+                                                }
+                                                else{
+                                                    $.ajax({
+                                                        type: 'POST',
+                                                        url: '/view/file/',
+                                                        traditional:true,
+                                                        data: {
+                                                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                                            pic_name:pic_name,
+                                                            pic_type:name_type,
+                                                            fid:fid,
+                                                            X_axis:X_axis,
+                                                            Y_axis:Y_axis,
+                                                        },
+                                                        success: function (data) {
+                                                            console.log('ajax post success')
+                                                            window.location.href = '/view/pic2d';
+                                                        },
+                                                        error:function (XMLHttpRequest, textStatus, errorThrown){
+                                                            console.log('ajax post error')
+                                                            // 状态码
+                                                            console.log('状态码:'+XMLHttpRequest.status);
+                                                            // 状态
+                                                            console.log("状态:"+XMLHttpRequest.readyState);
+                                                            // 错误信息
+                                                            console.log("错误信息:"+textStatus);
+                                                        }
+                                                    })
+                                                }
+                                            },
+                                            onCancel: function () {
+                                                location.reload();
+                                            }
+                                        });
+                                    }
+                                })
+                            }
+                            else if(name_type==='box'){
+                                $.get('/data/data_get', {file:fid},function (data,status){
+                                    if(status=='success'){
+                                        data = JSON.parse(data)['label'];
+                                        console.log(data);
+                                        $('#X-axis').html('')
+                                        $('#Y-axis').html('<label class="am-radio-inline">\
+                                <span style="font-weight: bold">数据列(可多选):<\span>\
+                            </label>')
+                                        for(var i=0;i<data.length;i++){
+                                            $('#Y-axis').append('<label class="am-checkbox-inline am-secondary">\
+                                <input type="checkbox" name="radio2" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                            </label>')
+                                        }
+                                        $('#my-prompt-line_bar_pile_radar').modal({
+                                            relatedTarget: this,
+                                            onConfirm: function (e) {
+                                                var X_axis = 0
+                                                var obj = document.getElementsByName("radio2");
+                                                var Y_axis = [];
+                                                for (k in obj) {
+                                                    //判断复选框是否被选中
+                                                    if (obj[k].checked){
+                                                        //获取被选中的复选框的值
+                                                        var tmp = Number(obj[k].value);
+                                                        Y_axis.push(tmp);
+                                                    }
+                                                }
+                                                if (!Y_axis){
+                                                    alert('请选择列');
+                                                }
+                                                else{
+                                                    $.ajax({
+                                                        type: 'POST',
+                                                        url: '/view/file/',
+                                                        traditional:true,
+                                                        data: {
+                                                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                                             pic_name:pic_name,
+                                                            pic_type:name_type,
+                                                            fid:fid,
+                                                            X_axis:X_axis,
+                                                            Y_axis:Y_axis,
+                                                        },
+                                                        success: function (data) {
+                                                            console.log('ajax post success')
+                                                            window.location.href = '/view/pic2d';
+                                                        },
+                                                        error:function (XMLHttpRequest, textStatus, errorThrown){
+                                                            console.log('ajax post error')
+                                                            // 状态码
+                                                            console.log('状态码:'+XMLHttpRequest.status);
+                                                            // 状态
+                                                            console.log("状态:"+XMLHttpRequest.readyState);
+                                                            // 错误信息
+                                                            console.log("错误信息:"+textStatus);
+                                                        }
+                                                    })
+                                                }
+                                            },
+                                            onCancel: function () {
+                                                location.reload();
+                                            }
+                                        });
+                                    }
+                                })
+                            }
+                            else if(name_type==='pie'){
+                                $.get('/data/data_get', {file:fid},function (data,status){
+                                    if(status=='success'){
+                                        data = JSON.parse(data)['label'];
+                                        console.log(data);
+                                        $('#X-axis').html('<label class="am-radio-inline">\
+                                <span style="font-weight: bold">分类列:</span>\
+                            </label>')
+                                        $('#Y-axis').html('<label class="am-radio-inline">\
+                                <span style="font-weight: bold">数据列:<\span>\
+                            </label>')
+                                        for(var i=0;i<data.length;i++){
+                                            $('#X-axis').append('<label class="am-radio-inline">\
+                                <input type="radio" name="radio1" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                            </label>')
+                                            $('#Y-axis').append('<label class="am-radio-inline">\
+                                <input type="radio" name="radio2" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                            </label>')
+                                        }
+                                        $('#my-prompt-line_bar_pile_radar').modal({
+                                            relatedTarget: this,
+                                            onConfirm: function (e) {
+                                                var X_axis = $("input[name=radio1]:checked").val();
+                                                var Y_axis = $("input[name=radio2]:checked").val();
+                                                if (!X_axis || !Y_axis){
+                                                    alert('请选择列');
+                                                }
+                                                else if(X_axis===Y_axis){
+                                                    alert('分类列和数据序列不能一样');
+                                                }
+                                                else{
+                                                    $.ajax({
+                                                        type: 'POST',
+                                                        url: '/view/file/',
+                                                        traditional:true,
+                                                        data: {
+                                                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                                             pic_name:pic_name,
+                                                            pic_type:name_type,
+                                                            fid:fid,
+                                                            X_axis:X_axis,
+                                                            Y_axis:Y_axis,
+                                                        },
+                                                        success: function (data) {
+                                                            console.log('ajax post success')
+                                                            window.location.href = '/view/pic2d';
+                                                        },
+                                                        error:function (XMLHttpRequest, textStatus, errorThrown){
+                                                            console.log('ajax post error')
+                                                            // 状态码
+                                                            console.log('状态码:'+XMLHttpRequest.status);
+                                                            // 状态
+                                                            console.log("状态:"+XMLHttpRequest.readyState);
+                                                            // 错误信息
+                                                            console.log("错误信息:"+textStatus);
+                                                        }
+                                                    })
+                                                }
+                                            },
+                                            onCancel: function () {
+                                                location.reload();
+                                            }
+                                        });
+                                    }
+                                })
+                            }
+                            else if(name_type==='pie_pile'){
+                                $.get('/data/data_get', {file:fid},function (data,status){
+                                    if(status=='success'){
+                                        data = JSON.parse(data)['label'];
+                                        console.log(data);
+                                        var txtx = '<tr><td><div class="am-form-group" id="X2-axis"><label class="am-radio-inline"><span style="font-weight: bold">分类列2:</span></label></div></td></tr>'
+                                        var txty = '<tr><td><div class="am-form-group" id="Y2-axis"><label class="am-radio-inline"><span style="font-weight: bold">数据列2:</span></label></div></td></tr>'
+                                        $('#view_data tr:last-child').after(txtx,txty)
+
+                                        $('#X-axis').html('<label class="am-radio-inline">\
+                                <span style="font-weight: bold">分类列1:</span>\
+                            </label>')
+                                        $('#Y-axis').html('<label class="am-radio-inline">\
+                                <span style="font-weight: bold">数据列1:<\span>\
+                            </label>')
+                                        for(var i=0;i<data.length;i++){
+                                            $('#X-axis').append('<label class="am-radio-inline">\
+                                <input type="radio" name="radio1" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                            </label>')
+                                            $('#Y-axis').append('<label class="am-radio-inline">\
+                                <input type="radio" name="radio2" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                            </label>')
+                                             $('#X2-axis').append('<label class="am-radio-inline">\
+                                <input type="radio" name="radio3" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                            </label>')
+                                            $('#Y2-axis').append('<label class="am-radio-inline">\
+                                <input type="radio" name="radio4" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                            </label>')
+                                        }
+                                        $('#my-prompt-line_bar_pile_radar').modal({
+                                            relatedTarget: this,
+                                            onConfirm: function (e) {
+                                                var X_axis = $("input[name=radio1]:checked").val();
+                                                var Y_axis = $("input[name=radio2]:checked").val();
+                                                var X2_axis = $("input[name=radio1]:checked").val();
+                                                var Y2_axis = $("input[name=radio2]:checked").val();
+                                                if (!X_axis || !Y_axis||!X2_axis || !Y2_axis){
+                                                    alert('请选择列');
+                                                }
+                                                else if(X_axis===Y_axis || X2_axis===Y2_axis){
+                                                    alert('分类列和数据序列不能一样');
+                                                }
+                                                else{
+                                                    $.ajax({
+                                                        type: 'POST',
+                                                        url: '/view/file/',
+                                                        traditional:true,
+                                                        data: {
+                                                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                                             pic_name:pic_name,
+                                                            pic_type:name_type,
+                                                            fid:fid,
+                                                            X_axis:[X_axis,X2_axis],
+                                                            Y_axis:[Y_axis,Y2_axis],
+                                                        },
+                                                        success: function (data) {
+                                                            console.log('ajax post success')
+                                                            window.location.href = '/view/pic2d';
+                                                        },
+                                                        error:function (XMLHttpRequest, textStatus, errorThrown){
+                                                            console.log('ajax post error')
+                                                            // 状态码
+                                                            console.log('状态码:'+XMLHttpRequest.status);
+                                                            // 状态
+                                                            console.log("状态:"+XMLHttpRequest.readyState);
+                                                            // 错误信息
+                                                            console.log("错误信息:"+textStatus);
+                                                        }
+                                                    })
+                                                }
+                                            },
+                                            onCancel: function () {
+                                                location.reload();
+                                            }
+                                        });
+                                    }
+                                })
+                            }
+                            else if(name_type==='3d_scatter'){
+                                 $.get('/data/data_get', {file:fid},function (data,status){
+                                    if(status=='success'){
+                                        data = JSON.parse(data)['label'];
+                                        console.log(data);
+                                        $('#X-axis').html('')
+                                        $('#Y-axis').html('<label class="am-radio-inline">\
+                                <span style="font-weight: bold">数据列(可多选):<\span>\
+                            </label>')
+                                        for(var i=0;i<data.length;i++){
+                                            $('#Y-axis').append('<label class="am-checkbox-inline am-secondary">\
+                                <input type="checkbox" name="radio2" value="'+String(i)+'" data-am-ucheck required minchecked="3">'+data[i]+'\
+                            </label>')
+                                        }
+                                        $('#my-prompt-line_bar_pile_radar').modal({
+                                            relatedTarget: this,
+                                            onConfirm: function (e) {
+                                                var X_axis = 0
+                                                var obj = document.getElementsByName("radio2");
+                                                var Y_axis = [];
+                                                for (k in obj) {
+                                                    //判断复选框是否被选中
+                                                    if (obj[k].checked){
+                                                        //获取被选中的复选框的值
+                                                        var tmp = Number(obj[k].value);
+                                                        Y_axis.push(tmp);
+                                                    }
+                                                }
+                                                if (!Y_axis){
+                                                    alert('请选择列');
+                                                }
+                                                else{
+                                                    $.ajax({
+                                                        type: 'POST',
+                                                        url: '/view/file/',
+                                                        traditional:true,
+                                                        data: {
+                                                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                                             pic_name:pic_name,
+                                                            pic_type:name_type,
+                                                            fid:fid,
+                                                            X_axis:X_axis,
+                                                            Y_axis:Y_axis,
+                                                        },
+                                                        success: function (data) {
+                                                            console.log('ajax post success')
+                                                            window.location.href = '/view/pic3d';
+                                                        },
+                                                        error:function (XMLHttpRequest, textStatus, errorThrown){
+                                                            console.log('ajax post error')
+                                                            // 状态码
+                                                            console.log('状态码:'+XMLHttpRequest.status);
+                                                            // 状态
+                                                            console.log("状态:"+XMLHttpRequest.readyState);
+                                                            // 错误信息
+                                                            console.log("错误信息:"+textStatus);
+                                                        }
+                                                    })
+                                                }
+                                            },
+                                            onCancel: function () {
+                                                location.reload();
+                                            }
+                                        });
+                                    }
+                                })
+                            }
+
+                        },
+                        onCancel:function (e){
+                            location.reload();
+                        }
+
+                    })
+                })
+            }
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,1378 @@
+{% extends "index/base.html" %}
+{% block headadd %}
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.1/mapbox-gl.js'></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-language/v1.0.0/mapbox-gl-language.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.1.1/mapbox-gl.css' rel='stylesheet' />
+    <script src="/static/view/js/echarts.min.js"></script>
+    <script src="/static/view/js/dataTool.js"></script>
+    <script src="/static/view/js/turf.min.js"></script>
+{#    <link#}
+{#            rel="stylesheet"#}
+{#            href="/static/view/css/ol.css"#}
+{#            type="text/css"#}
+{#    />#}
+{#    <script src="/static/view/js/ol.js"></script>#}
+{#    <script src="/static/view/js/arc.js"></script>#}
+    <style>
+        body { margin:0; padding:0; }
+        {##map { position:absolute; top:0; bottom:0; width:100%; }#}
+        .div_any{
+            width: 98%;
+            margin-left: 1%;
+            margin-bottom: 25px;
+            height: 685px;
+        }
+        .div_any01{
+            width: 26%;
+            margin-right: 1%;
+            display: inline-block;
+        }
+        .div_any02{
+            width: 45%;
+        {#margin-right: 1%;#}
+            display: inline-block;
+        }
+        .div_any_child{
+            width: 100%;
+            height: 350px;
+            background-color: #fff;
+            border-radius: 4px;
+        {#border: 1px solid #fff;#}
+        {#border-top: 2px solid #fff;#}
+        {#box-sizing: border-box;#}
+            position: relative;
+            margin-top: 10px;
+        }
+        .div_height{
+            height:710px !important;
+        }
+        .p_chart{
+            height: 288px;
+        {#padding: 5px 5px;#}
+        {#margin-top: 15px;#}
+
+        }
+        .left{
+            float: left;
+        }
+        .right{
+            float: right;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="tpl-content-wrapper">
+
+        {#        <div id="map"></div>#}
+        <div class="row-content am-cf am-cf" style="background-color: #f2f6f9;position: relative;top: 0;left: 0;width: 100%;height:100px;margin: 0px">
+            <div class="row am-cf">
+                <div class="am-u-sm-12 am-u-md-12 am-u-lg-9">
+                    <div class="page-header-heading"><span class="am-icon-home page-header-heading-icon"></span> 基于机器学习的环境数据分析平台的设计与实现 <small>{{user.username}} Home</small></div>
+                    <p class="page-header-description">此平台利用机器学习分析各种环境数据，包含数据可视化、时间序列预测、账号管理、数据管理等功能。</p>
+                </div>
+            </div>
+        </div>
+        <!--统计分析图-->
+        <div class="div_any">
+            <div class="left div_any01">
+                {% for pic in viewleft_tmp %}
+                    <div class="div_any_child">
+                        <div class="widget-head am-cf">
+                            <div class="widget-title am-fl" style="color: #838FA1;">{{ pic.vic_name }}</div>
+                            <div class="widget-function am-fr">
+                                <a href="javascript:;" class="am-icon-cog" box="box" id="left_select{{ pic.id }}"></a>
+                            </div>
+                        </div>
+                        <p id="view{{ pic.id }}" class="p_chart"></p>
+                    </div>
+                    {% if pic.viewpic != '-1' %}
+                        <!-- 测试echarts-->
+                        <script type="text/javascript">
+                            function decimal(num,v)
+                            {
+                                var vv = Math.pow(10,v);
+                                return Math.round(num*vv)/vv;
+                            }
+
+                            // 基于准备好的dom，初始化echarts实例
+                            var myChart = echarts.init(document.getElementById('view{{ pic.id }}'), 'white', {renderer: 'canvas'});
+                            myChart.resize();
+                            var pic_class = {{ classl|safe }}[{{ pic.id }}];
+                            var flagl = {{ flagl|safe }}[{{ pic.id }}];
+                            flagl = String(flagl)
+                            console.log(flagl)
+                            if(pic_class==='line'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetl | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labell | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        [31, 201, 10, 180, 30, 100, 150],
+                                    ];
+                                    var lebal = ['name','x1','x2']
+                                }
+
+                                var seriesm = []
+                                for(k=1;k<dataset.length;k++){
+                                    seriesm.push({
+                                        data: dataset[k],
+                                        name:lebal[k],
+                                        type: 'line',
+                                    },)
+                                }
+
+                                var option = {
+                                    xAxis: {
+                                        type: 'category',
+                                        data: dataset[0],
+                                        splitLine: {
+                                            show: true,
+                                        },
+                                    },
+                                    yAxis: {
+                                        type: 'value',
+                                        splitLine: {
+                                            show: true,
+                                        },
+                                    },
+                                    series: seriesm,
+                                    tooltip: {
+                                        trigger: 'axis',
+                                        axisPointer: {
+                                            type: 'shadow'
+                                        },
+                                    },
+                                    legend: {
+                                        orient: 'horizontal',  //'vertical'
+                                        type: 'scroll',
+                                    },
+                                    grid:{
+                                        x:55,
+                                    },
+                                };
+                            }
+                            else if(pic_class==='pie'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetl | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labell | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                    ];
+                                }
+
+                                var datass = []
+                                for(k=0;k<dataset[1].length;k++){
+                                    datass.push({
+                                        value: dataset[1][k],
+                                        name:dataset[0][k],
+                                    },)
+                                }
+
+                                var option = {
+                                    tooltip: {
+                                        trigger: 'item'
+                                    },
+                                    legend: {
+                                        top: '5%',
+                                        left: 'center',
+                                        type: 'scroll',
+                                    },
+                                    series: [
+                                        {
+                                            name: 'Access From',
+                                            type: 'pie',
+                                            radius: ['40%', '70%'],
+                                            avoidLabelOverlap: false,
+                                            label: {
+                                                show: false,
+                                                position: 'center'
+                                            },
+                                            emphasis: {
+                                                label: {
+                                                    show: true,
+                                                    fontSize: '40',
+                                                    fontWeight: 'bold'
+                                                }
+                                            },
+                                            labelLine: {
+                                                show: false
+                                            },
+                                            data: datass,
+                                        }
+                                    ]
+                                };
+                            }
+                            else if(pic_class==='pie_pile'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetl | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labell | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        ['xzx','cxz','cxc'],
+                                        [123,45,234],
+                                    ];
+                                }
+                                console.log(dataset)
+
+                                var label = dataset[0].concat(dataset[2])
+
+
+                                var datass1 = []
+                                for(k=0;k<dataset[1].length;k++){
+                                    datass1.push({
+                                        value: dataset[1][k],
+                                        name:dataset[0][k],
+                                    },)
+                                }
+                                var datass2 = []
+                                for(k=0;k<dataset[3].length;k++){
+                                    datass2.push({
+                                        value: dataset[3][k],
+                                        name:dataset[2][k],
+                                    },)
+                                }
+
+                                console.log(datass2)
+
+
+                                var option = {
+                                    tooltip: {
+                                        trigger: 'item',
+                                        formatter: '{a} <br/>{b}: {c} ({d}%)'
+                                    },
+                                    legend: {
+                                        data: label,
+                                        type: 'scroll',
+                                    },
+                                    series: [
+                                        {
+                                            name: 'Access From',
+                                            type: 'pie',
+                                            selectedMode: 'single',
+                                            radius: [0, '30%'],
+                                            label: {
+                                                position: 'inner',
+                                                fontSize: 12
+                                            },
+                                            labelLine: {
+                                                show: false
+                                            },
+                                            data: datass2
+                                        },
+                                        {
+                                            name: 'Access From',
+                                            type: 'pie',
+                                            radius: ['40%', '55%'],
+                                            labelLine: {
+                                                length: 14
+                                            },
+                                            label: {
+                                                formatter: '{b|{b}}{abg|}\n{hr|}\n{c}  {per|{d}%}  ',
+                                                backgroundColor: '#F6F8FC',
+                                                borderColor: '#8C8D8E',
+                                                borderWidth: 0.6,
+                                                borderRadius: 3,
+                                                rich: {
+                                                    a: {
+                                                        color: '#6E7079',
+                                                        lineHeight: 20,
+                                                        align: 'center'
+                                                    },
+                                                    hr: {
+                                                        borderColor: '#8C8D8E',
+                                                        width: '100%',
+                                                        borderWidth: 1,
+                                                        height: 0
+                                                    },
+                                                    b: {
+                                                        color: '#6E7079',
+                                                        lineHeight: 20,
+                                                        align: 'center',
+                                                        fontWeight: 'bold',
+                                                    },
+                                                    per: {
+                                                        color: '#fff',
+                                                        backgroundColor: '#4C5058',
+                                                        padding: [1, 2],
+                                                        borderRadius: 2
+                                                    }
+                                                }
+                                            },
+                                            data: datass1
+                                        }
+                                    ]
+                                };
+                            }
+                            else if(pic_class==='bar'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetl | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labell | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var lebal = ['name','x1','x2']
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        [31, 201, 10, 180, 30, 100, 150],
+                                    ];
+                                }
+
+
+                                var seriesm = []
+                                for(k=1;k<dataset.length;k++){
+                                    seriesm.push({
+                                        data: dataset[k],
+                                        name:lebal[k],
+                                        type: 'bar',
+                                        showBackground: true,
+                                        backgroundStyle: {
+                                            color: 'rgba(180, 180, 180, 0.2)'
+                                        }
+                                    },)
+                                }
+
+                                var option = {
+                                    xAxis: {
+                                        type: 'category',
+                                        data: dataset[0]
+                                    },
+                                    yAxis: {
+                                        type: 'value'
+                                    },
+                                    series: seriesm,
+                                    legend: {
+                                        type: 'scroll',
+                                    },
+                                    grid:{
+                                        x:55,
+                                    },
+                                    tooltip: {
+                                        trigger: 'axis', //坐标轴触发，主要在柱状图，折线图等会使用类目轴的图表中使用
+                                        axisPointer: {// 坐标轴指示器，坐标轴触发有效
+                                            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+                                        }
+                                    },
+                                };
+                            }
+                            else if(pic_class==='bar_pile'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetl | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labell | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        [31, 201, 10, 180, 30, 100, 150],
+                                    ];
+                                    var lebal = ['name','x1','x2']
+                                }
+
+
+                                var seriesm = []
+                                for(k=1;k<dataset.length;k++){
+                                    seriesm.push({
+                                        name: lebal[k],
+                                        type: 'bar',
+                                        stack: 'total',
+                                        {#label: {show: true},#}
+                                        emphasis: {
+                                            focus: 'series'
+                                        },
+                                        data: dataset[k]
+                                    },)
+                                }
+
+                                var option = {
+                                    tooltip: {
+                                        trigger: 'axis',
+                                        axisPointer: {
+                                            // Use axis to trigger tooltip
+                                            type: 'shadow' // 'shadow' as default; can also be 'line' or 'shadow'
+                                        }
+                                    },
+                                    legend: {
+                                        type: 'scroll',
+                                    },
+                                    xAxis: {
+                                        type: 'value'
+                                    },
+                                    yAxis: {
+                                        type: 'category',
+                                        data: dataset[0]
+                                    },
+                                    grid:{
+                                        x:57,
+                                    },
+                                    series: seriesm
+                                };
+                            }
+                            else if(pic_class==='box'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetl | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labell | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var lebal = ['x1','x2'];
+                                    var dataset = [
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        [31, 201, 10, 180, 30, 100, 150],
+                                    ];
+                                }
+                                var data = echarts.dataTool.prepareBoxplotData(dataset);
+                                var option = {
+                                    title: [
+                                        {
+                                            text: 'upper: Q3 + 1.5 * IQR \nlower: Q1 - 1.5 * IQR',
+                                            borderColor: '#999',
+                                            borderWidth: 1,
+                                            textStyle: {
+                                                fontSize: 14
+                                            },
+                                            left: '10%',
+                                            top: '84%'
+                                        }
+                                    ],
+                                    tooltip: {
+                                        trigger: 'item',
+                                        axisPointer: {
+                                            type: 'shadow'
+                                        }
+                                    },
+                                    xAxis: {
+                                        type: 'category',
+                                        boundaryGap: true,
+                                        nameGap: 30,
+                                        splitArea: {
+                                            show: false
+                                        },
+                                        data: lebal,
+                                        splitLine: {
+                                            show: false
+                                        }
+                                    },
+                                    yAxis: {
+                                        type: 'value',
+                                        splitArea: {
+                                            show: true
+                                        }
+                                    },
+                                    legend:{
+                                        type: 'scroll',
+                                    },
+                                    series: [
+                                        {
+                                            name: 'boxplot',
+                                            type: 'boxplot',
+                                            data: data.boxData,
+                                            tooltip: {
+                                                formatter: function (param) {
+                                                    return [
+                                                        'Experiment ' + param.name + ': ',
+                                                        'upper: ' + decimal(param.data[5],2),
+                                                        'Q3: ' + decimal(param.data[4],2),
+                                                        'median: ' + decimal(param.data[3],2),
+                                                        'Q1: ' + decimal(param.data[2],2),
+                                                        'lower: ' + decimal(param.data[1],2)
+                                                    ].join('<br/>');
+                                                }
+                                            }
+                                        },
+                                        {
+                                            name: 'outlier',
+                                            type: 'scatter',
+                                            data: data.outliers
+                                        }
+                                    ]
+                                };
+                            }
+                            else if(pic_class==='radar'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetl | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labell | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var lebal = ['name','max','Allocated Budget','Actual Spending','new'];
+                                    var dataset = [
+                                        ['Sales', 'Administration', 'Information Technology', 'Customer Support', 'Development', 'Marketing'],
+                                        [6500, 16000, 30000, 38000, 52000, 25000],
+                                        [4200, 3000, 20000, 35000, 50000, 18000],
+                                        [5000, 14000, 28000, 26000, 42000, 21000],
+                                        [500, 1400, 2800, 2800, 4209, 2100],
+                                    ];
+                                }
+
+
+                                var seriesm = []
+                                for(k=2;k<dataset.length;k++){
+                                    seriesm.push({
+                                        name: lebal[k],
+                                        value:dataset[k],
+                                        emphasis: {
+                                            label: {
+                                                show: true,
+                                                color: '#fff',
+                                                fontSize: 15,
+                                                formatter: '{c}',       // 鼠标悬浮时展示数据加上单位
+                                                backgroundColor: '#9a60b4',
+                                                borderRadius: 2,
+                                                padding: 3,
+                                                {#shadowBlur: 3#}
+                                            }
+                                        }
+
+                                    },)
+                                }
+
+                                var maxs = []
+                                for(k=0;k<dataset[1].length;k++){
+                                    maxs.push({
+                                        name: dataset[0][k],
+                                        max: dataset[1][k]
+                                    },)
+                                }
+
+
+                                var option = {
+                                    legend: {
+                                        type: 'scroll',
+                                        padding:[0,0,0,0]  //上右下左
+                                    },
+                                    radar: {
+                                        // shape: 'circle',
+                                        indicator: maxs,
+                                        radius:90,
+                                        name:{
+                                            textStyle:{
+                                                padding:[-6,-10]
+                                            }
+                                        }
+                                    },
+                                    series: [
+                                        {
+                                            name: 'Budget vs spending',
+                                            type: 'radar',
+                                            data: seriesm
+                                        }
+                                    ]
+                                };
+                            }
+                            option && myChart.setOption(option);
+                        </script>
+                        <!-- 测试echarts end-->
+                    {% endif %}
+
+
+                {% endfor %}
+            </div>
+            <div class="div_any02 left ">
+                <div class="div_any_child div_height">
+                    <div id="map" style="width:100%;height:100%;display: inline-block;"></div>
+                </div>
+            </div>
+            <div class="right div_any01">
+                {% for pic in viewright_tmp %}
+                    <div class="div_any_child">
+                        <div class="widget-head am-cf">
+                            <div class="widget-title am-fl" style="color: #838FA1;">{{ pic.vic_name }}</div>
+                            <div class="widget-function am-fr">
+                                <a href="javascript:;" class="am-icon-cog" box="box" id="right_select{{ pic.id }}"></a>
+                            </div>
+                        </div>
+                        <p id="view{{ pic.id }}" class="p_chart"></p>
+                    </div>
+                    {% if pic.viewpic != '-1' %}
+                        <!-- 测试echarts-->
+                        <script type="text/javascript">
+                            function decimal(num,v)
+                            {
+                                var vv = Math.pow(10,v);
+                                return Math.round(num*vv)/vv;
+                            }
+
+                            // 基于准备好的dom，初始化echarts实例
+                            var myChart = echarts.init(document.getElementById('view{{ pic.id }}'), 'white', {renderer: 'canvas'});
+                            myChart.resize();
+                            var pic_class = {{ classr|safe }}[{{ pic.id }}];
+                            var flagl = {{ flagr|safe }}[{{ pic.id }}];
+                            flagl = String(flagl)
+                            console.log(flagl)
+                            if(pic_class==='line'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetr | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labelr | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        [31, 201, 10, 180, 30, 100, 150],
+                                    ];
+                                    var lebal = ['name','x1','x2']
+                                }
+
+                                var seriesm = []
+                                for(k=1;k<dataset.length;k++){
+                                    seriesm.push({
+                                        data: dataset[k],
+                                        name:lebal[k],
+                                        type: 'line',
+                                    },)
+                                }
+
+                                var option = {
+                                    xAxis: {
+                                        type: 'category',
+                                        data: dataset[0],
+                                        splitLine: {
+                                            show: true,
+                                        },
+                                    },
+                                    yAxis: {
+                                        type: 'value',
+                                        splitLine: {
+                                            show: true,
+                                        },
+                                    },
+                                    grid:{
+                                        x:55,
+                                    },
+                                    series: seriesm,
+                                    tooltip: {
+                                        trigger: 'axis',
+                                        axisPointer: {
+                                            type: 'shadow'
+                                        },
+                                    },
+                                    legend: {
+                                        orient: 'horizontal',  //'vertical'
+                                        type: 'scroll',
+                                    },
+                                };
+                            }
+                            else if(pic_class==='pie'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetr | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labelr | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                    ];
+                                }
+
+                                var datass = []
+                                for(k=0;k<dataset[1].length;k++){
+                                    datass.push({
+                                        value: dataset[1][k],
+                                        name:dataset[0][k],
+                                    },)
+                                }
+
+                                var option = {
+                                    tooltip: {
+                                        trigger: 'item'
+                                    },
+                                    legend: {
+                                        top: '5%',
+                                        left: 'center',
+                                        type: 'scroll',
+                                    },
+                                    series: [
+                                        {
+                                            name: 'Access From',
+                                            type: 'pie',
+                                            radius: ['40%', '70%'],
+                                            avoidLabelOverlap: false,
+                                            label: {
+                                                show: false,
+                                                position: 'center'
+                                            },
+                                            emphasis: {
+                                                label: {
+                                                    show: true,
+                                                    fontSize: '40',
+                                                    fontWeight: 'bold'
+                                                }
+                                            },
+                                            labelLine: {
+                                                show: false
+                                            },
+                                            data: datass,
+                                        }
+                                    ]
+                                };
+                            }
+                            else if(pic_class==='pie_pile'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetr | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labelr | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        ['xzx','cxz','cxc'],
+                                        [123,45,234],
+                                    ];
+                                }
+                                console.log(dataset)
+
+                                var label = dataset[0].concat(dataset[2])
+
+
+                                var datass1 = []
+                                for(k=0;k<dataset[1].length;k++){
+                                    datass1.push({
+                                        value: dataset[1][k],
+                                        name:dataset[0][k],
+                                    },)
+                                }
+                                var datass2 = []
+                                for(k=0;k<dataset[3].length;k++){
+                                    datass2.push({
+                                        value: dataset[3][k],
+                                        name:dataset[2][k],
+                                    },)
+                                }
+
+                                console.log(datass2)
+
+
+                                var option = {
+                                    tooltip: {
+                                        trigger: 'item',
+                                        formatter: '{a} <br/>{b}: {c} ({d}%)'
+                                    },
+                                    legend: {
+                                        data: label,
+                                        type: 'scroll',
+                                    },
+                                    series: [
+                                        {
+                                            name: 'Access From',
+                                            type: 'pie',
+                                            selectedMode: 'single',
+                                            radius: [0, '30%'],
+                                            label: {
+                                                position: 'inner',
+                                                fontSize: 12
+                                            },
+                                            labelLine: {
+                                                show: false
+                                            },
+                                            data: datass2
+                                        },
+                                        {
+                                            name: 'Access From',
+                                            type: 'pie',
+                                            radius: ['40%', '55%'],
+                                            labelLine: {
+                                                length: 14
+                                            },
+                                            label: {
+                                                formatter: '{b|{b}}{abg|}\n{hr|}\n{c}  {per|{d}%}  ',
+                                                backgroundColor: '#F6F8FC',
+                                                borderColor: '#8C8D8E',
+                                                borderWidth: 0.6,
+                                                borderRadius: 3,
+                                                rich: {
+                                                    a: {
+                                                        color: '#6E7079',
+                                                        lineHeight: 20,
+                                                        align: 'center'
+                                                    },
+                                                    hr: {
+                                                        borderColor: '#8C8D8E',
+                                                        width: '100%',
+                                                        borderWidth: 1,
+                                                        height: 0
+                                                    },
+                                                    b: {
+                                                        color: '#6E7079',
+                                                        lineHeight: 20,
+                                                        align: 'center',
+                                                        fontWeight: 'bold',
+                                                    },
+                                                    per: {
+                                                        color: '#fff',
+                                                        backgroundColor: '#4C5058',
+                                                        padding: [1, 2],
+                                                        borderRadius: 2
+                                                    }
+                                                }
+                                            },
+                                            data: datass1
+                                        }
+                                    ]
+                                };
+                            }
+                            else if(pic_class==='bar'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetr | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labelr | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var lebal = ['name','x1','x2']
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        [31, 201, 10, 180, 30, 100, 150],
+                                    ];
+                                }
+
+
+                                var seriesm = []
+                                for(k=1;k<dataset.length;k++){
+                                    seriesm.push({
+                                        data: dataset[k],
+                                        name:lebal[k],
+                                        type: 'bar',
+                                        showBackground: true,
+                                        backgroundStyle: {
+                                            color: 'rgba(180, 180, 180, 0.2)'
+                                        }
+                                    },)
+                                }
+
+                                var option = {
+                                    xAxis: {
+                                        type: 'category',
+                                        data: dataset[0]
+                                    },
+                                    yAxis: {
+                                        type: 'value'
+                                    },
+                                    series: seriesm,
+                                    grid:{
+                                        x:55,
+                                    },
+                                    legend: {
+                                        type: 'scroll',
+                                    },
+                                    tooltip: {
+                                        trigger: 'axis', //坐标轴触发，主要在柱状图，折线图等会使用类目轴的图表中使用
+                                        axisPointer: {// 坐标轴指示器，坐标轴触发有效
+                                            type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+                                        }
+                                    },
+                                };
+                            }
+                            else if(pic_class==='bar_pile'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetr | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labelr | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var dataset = [
+                                        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        [31, 201, 10, 180, 30, 100, 150],
+                                    ];
+                                    var lebal = ['name','x1','x2']
+                                }
+
+
+                                var seriesm = []
+                                for(k=1;k<dataset.length;k++){
+                                    seriesm.push({
+                                        name: lebal[k],
+                                        type: 'bar',
+                                        stack: 'total',
+                                        {#label: {show: true},#}
+                                        emphasis: {
+                                            focus: 'series'
+                                        },
+                                        data: dataset[k]
+                                    },)
+                                }
+
+                                var option = {
+                                    tooltip: {
+                                        trigger: 'axis',
+                                        axisPointer: {
+                                            // Use axis to trigger tooltip
+                                            type: 'shadow' // 'shadow' as default; can also be 'line' or 'shadow'
+                                        }
+                                    },
+                                    legend: {
+                                        type: 'scroll',
+                                    },
+                                    grid:{
+                                        x:57,
+                                    },
+                                    xAxis: {
+                                        type: 'value'
+                                    },
+                                    yAxis: {
+                                        type: 'category',
+                                        data: dataset[0]
+                                    },
+                                    series: seriesm
+                                };
+                            }
+                            else if(pic_class==='box'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetr | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labelr | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var lebal = ['x1','x2'];
+                                    var dataset = [
+                                        [120, 200, 150, 80, 70, 110, 130],
+                                        [31, 201, 10, 180, 30, 100, 150],
+                                    ];
+                                }
+                                var data = echarts.dataTool.prepareBoxplotData(dataset);
+                                var option = {
+                                    title: [
+                                        {
+                                            text: 'upper: Q3 + 1.5 * IQR \nlower: Q1 - 1.5 * IQR',
+                                            borderColor: '#999',
+                                            borderWidth: 1,
+                                            textStyle: {
+                                                fontSize: 14
+                                            },
+                                            left: '10%',
+                                            top: '84%'
+                                        }
+                                    ],
+                                    tooltip: {
+                                        trigger: 'item',
+                                        axisPointer: {
+                                            type: 'shadow'
+                                        }
+                                    },
+                                    xAxis: {
+                                        type: 'category',
+                                        boundaryGap: true,
+                                        nameGap: 30,
+                                        splitArea: {
+                                            show: false
+                                        },
+                                        data: lebal,
+                                        splitLine: {
+                                            show: false
+                                        }
+                                    },
+                                    yAxis: {
+                                        type: 'value',
+                                        splitArea: {
+                                            show: true
+                                        }
+                                    },
+                                    legend:{
+                                        type: 'scroll',
+                                    },
+                                    series: [
+                                        {
+                                            name: 'boxplot',
+                                            type: 'boxplot',
+                                            data: data.boxData,
+                                            tooltip: {
+                                                formatter: function (param) {
+                                                    return [
+                                                        'Experiment ' + param.name + ': ',
+                                                        'upper: ' + decimal(param.data[5],2),
+                                                        'Q3: ' + decimal(param.data[4],2),
+                                                        'median: ' + decimal(param.data[3],2),
+                                                        'Q1: ' + decimal(param.data[2],2),
+                                                        'lower: ' + decimal(param.data[1],2)
+                                                    ].join('<br/>');
+                                                }
+                                            }
+                                        },
+                                        {
+                                            name: 'outlier',
+                                            type: 'scatter',
+                                            data: data.outliers
+                                        }
+                                    ]
+                                };
+                            }
+                            else if(pic_class==='radar'){
+                                if(flagl==='1'){
+                                    var dataset = {{ datasetr | safe }}[{{ pic.id }}];
+                                    var lebal = {{ labelr | safe }}[{{ pic.id }}];
+                                }
+                                else{
+                                    var lebal = ['name','max','Allocated Budget','Actual Spending','new'];
+                                    var dataset = [
+                                        ['Sales', 'Administration', 'Information Technology', 'Customer Support', 'Development', 'Marketing'],
+                                        [6500, 16000, 30000, 38000, 52000, 25000],
+                                        [4200, 3000, 20000, 35000, 50000, 18000],
+                                        [5000, 14000, 28000, 26000, 42000, 21000],
+                                        [500, 1400, 2800, 2800, 4209, 2100],
+                                    ];
+                                }
+
+
+                                var seriesm = []
+                                for(k=2;k<dataset.length;k++){
+                                    seriesm.push({
+                                        name: lebal[k],
+                                        value:dataset[k],
+                                        emphasis: {
+                                            label: {
+                                                show: true,
+                                                color: '#fff',
+                                                fontSize: 15,
+                                                formatter: '{c}',       // 鼠标悬浮时展示数据加上单位
+                                                backgroundColor: '#9a60b4',
+                                                borderRadius: 2,
+                                                padding: 3,
+                                                {#shadowBlur: 3#}
+                                            }
+                                        }
+
+                                    },)
+                                }
+
+                                var maxs = []
+                                for(k=0;k<dataset[1].length;k++){
+                                    maxs.push({
+                                        name: dataset[0][k],
+                                        max: dataset[1][k]
+                                    },)
+                                }
+
+
+                                var option = {
+                                    legend: {
+                                        type: 'scroll',
+                                        padding:[0,0,0,0]  //上右下左
+                                    },
+                                    radar: {
+                                        // shape: 'circle',
+                                        indicator: maxs,
+                                        radius:98,
+                                        name:{
+                                            textStyle:{
+                                                padding:[-6,-10]
+                                            }
+                                        }
+                                    },
+                                    series: [
+                                        {
+                                            name: 'Budget vs spending',
+                                            type: 'radar',
+                                            data: seriesm
+                                        }
+                                    ]
+                                };
+                            }
+                            option && myChart.setOption(option);
+                        </script>
+                        <!-- 测试echarts end-->
+                    {% endif %}
+
+
+                {% endfor %}
+            </div>
+        </div>
+
+
+    </div>
+{% endblock %}
+
+{% block script_or_other %}
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">选择可视化数据</div>
+            <div class="am-modal-bd">
+                <div class="am-form-group">
+                    <br>
+                    <table class="am-table">
+                        <tr>
+                            <td>图片名称</td>
+                            <td><input type="text" class="am-modal-prompt-input" style="width: 60%"></td>
+                        </tr>
+                        <tr>
+                            <td>选择图片</td>
+                            <td>  <select data-am-selected="{maxHeight: 400} " id="pic_id">
+                                {% for pic in pics_all %}
+                                    <option value="{{ pic.id }}">{{ pic.pic_name }}</option>
+                                {% endfor %}
+                            </select></td></tr>
+
+                    </table>
+                </div>
+
+
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        function bind(obj, eventStr, callback) {
+            if (obj.addEventListener) {
+                //大部分浏览器兼容的方式
+                obj.addEventListener(eventStr, callback, false);
+            } else {
+                /*
+                 * this是谁由调用方式决定
+                 * callback.call(obj)
+                 */
+                //IE8及以下
+                obj.attachEvent("on" + eventStr, function () {
+                    //在匿名函数中调用回调函数
+                    callback.call(obj);
+                });
+            }
+        }
+
+        window.onload = function () {
+            $('#index_flag').attr('class','active');
+            document.documentElement.style.overflow='hidden';
+            mapboxgl.accessToken = 'pk.eyJ1IjoibHlteCIsImEiOiJjbDI4Yzl4MnkwODBxM2twZTU2ZzIzbnRuIn0.s_JB6ZjS9lYxdoJXe_-qgw';
+            var map = new mapboxgl.Map({
+                style: 'mapbox://styles/mapbox/light-v10',
+                center: [121.497,31.239],
+                zoom: 8.3,
+                container: 'map',
+                boxZoom:true,
+                trackResize:true,
+            });
+            map.addControl(new MapboxLanguage({
+                defaultLanguage: 'zh-Hans'}))
+            {#map.on('load', function() {#}
+            {#    var layers = map.getStyle().layers;#}
+            {#    var labelLayerId;#}
+            {#    for (var i = 0; i < layers.length; i++) {#}
+            {#        if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {#}
+            {#            labelLayerId = layers[i].id;#}
+            {#            break;}}});#}
+
+
+            a =  $.ajax({
+                url: "/static/map/js/上海.json",//json文件位置，文件名
+                type: "GET",//请求方式为get
+                dataType: "json", //返回数据格式为json
+                async: false,
+                success: function(data) {//请求成功完成后要执行的方法
+                    console.log(data.features)
+                    for(i=0;i<data.features.length;i++){
+                        data.features[i].id = i+1;
+                    }
+                    map.on('load', function() {
+                        var layers = map.getStyle().layers;
+
+                        var labelLayerId;
+                        for (var i = 0; i < layers.length; i++) {
+                            if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
+                                labelLayerId = layers[i].id;
+                                break;
+                            }
+                        }
+
+                        {#map.addSource("fillSourceID", {#}
+                        {#    type: "geojson" /* geojson类型资源 */,#}
+                        {#    data: data /* geojson数据 */});#}
+                        {##}
+                        {#map.addLayer({#}
+                        {#    id: "fillID",#}
+                        {#    type: "line" /* fill类型一般用来表示一个面，一般较大 */,#}
+                        {#    source: "fillSourceID",#}
+                        {#    "layout": {#}
+                        {#        "line-join": "round",#}
+                        {#        "line-cap": "round"#}
+                        {#    },#}
+                        {#    "paint": {#}
+                        {#        "line-color": "#888",#}
+                        {#        "line-width": 2#}
+                        {#    }}, labelLayerId);#}
+
+                        //code开始
+                        const arcs = []
+                        const step = 300
+
+                        var datax = []
+                        for(var j=0;j<data.features.length;j++){
+                            datax.push([
+                                [121.497, 31.239],
+                                data.features[j].properties.centroid
+                            ])
+                        }
+
+                        var lines = {
+                            features: []
+                        }
+
+                        for(var i=0;i<datax.length;i++){
+                            var mid = [(datax[i][0][0]+datax[i][1][0])/2,(datax[i][0][1]+datax[i][1][1])/1.996]
+                            lines.features.push(
+                                turf.lineString([
+                                    datax[i][0],
+                                    mid,
+                                    datax[i][1]
+                                ])
+                            )
+                        }
+                        console.log('lines',lines)
+
+                        const split = (lines) => {
+                            for (let line of lines.features) {
+                                const arc = []
+
+                                const bezier = turf.bezierSpline(line)
+                                const len = turf.length(bezier)
+
+                                for (let i = 0; i < len; i += len / step) {
+                                    const p = turf.along(bezier, i)
+                                    arc.push(p.geometry.coordinates)
+                                }
+
+                                arcs.push(arc)
+                            }
+                        }
+                        //
+                        split(lines)
+                        console.log('arcs:', arcs)
+
+                        map.addSource('segment', {
+                            type: 'geojson',
+                            lineMetrics: true,
+                            data: null
+                        })
+
+                        map.addLayer({
+                            id: 'segment',
+                            source: 'segment',
+                            type: 'line',
+                            paint: {
+                                'line-color': 'red',
+                                'line-width': 2,
+                                'line-gradient': [
+                                    'interpolate',
+                                    ['linear'],
+                                    ['line-progress'],
+                                    0,
+                                    'rgba(255, 255, 255, 0.1)',
+                                    0.8,
+                                    'rgba(255, 0, 0, 0.6)',
+                                    1,
+                                    'red'
+                                ]
+                            }
+                        })
+
+                        // source = map.getSource('segment')
+                        //
+
+                        const segments = {
+                            type: 'FeatureCollection',
+                            features: []
+                        }
+
+                        let counter = 0, source = null
+                        const animate = () => {
+                            if (counter === step) {
+                                counter = 0
+                                segments.features.forEach(f => f.geometry.coordinates.length = 0)
+                            }
+
+                            arcs.forEach((arc, i) => {
+                                if (!segments.features[i]) {
+                                    segments.features[i] = {
+                                        type: 'Feature',
+                                        geometry: {
+                                            type: 'LineString',
+                                            coordinates: [],
+                                        }
+                                    }
+                                }
+
+                                segments.features[i].geometry.coordinates.push(arc[counter])
+                            })
+
+                            // source.setData(segments)
+                            if (map.getSource("segment")) {
+                                map.getSource("segment").setData(segments)
+                            } else {
+                                map.addSource("segment", {
+                                    "type": "geojson",
+                                    "data": segments
+                                });
+                            }
+
+                            requestAnimationFrame(animate)
+                            counter++
+                        }
+
+                        animate()
+
+
+                    });
+                }
+            });
+
+
+
+
+
+            $("a[box='box']").each(function (i){
+                $(this).click(function (){
+                    var info = $(this).attr('id');
+                    console.log(info);
+                    $('#my-prompt').modal({
+                        relatedTarget: this,
+                        onConfirm: function (options) {
+                            var pic_name = String(options.data);
+                            if (pic_name.length==0){
+                                alert('请输入图片名称');
+                                return false
+                            }
+                            var pic_id = $("#pic_id").val()
+                            $.ajax({
+                                type: 'POST',
+                                url: '/index/pic/',
+                                data: {
+                                    csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                    pic_name:pic_name,
+                                    info:info,
+                                    pic_id:pic_id
+                                },
+                                success: function (data) {
+                                    console.log('ajax post success')
+                                    window.location.href = '/index';
+                                },
+                                error:function (XMLHttpRequest, textStatus, errorThrown){
+                                    console.log('ajax post error')
+                                    // 状态码
+                                    console.log('状态码:'+XMLHttpRequest.status);
+                                    // 状态
+                                    console.log("状态:"+XMLHttpRequest.readyState);
+                                    // 错误信息
+                                    console.log("错误信息:"+textStatus);
+                                }
+                            })
+
+
+                        },
+                        onCancel: function (data) {
+                        }})})
+            })
+
+
+
+
+
+        }
+    </script>
+{% endblock %}
+

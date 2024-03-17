@@ -1,0 +1,822 @@
+{% extends 'view/base.html' %}
+{% block headadd %}
+    <script src="/static/view/js/echarts.min.js"></script>
+    <script src="/static/view/js/dataTool.js"></script>
+{% endblock headadd %}
+{% block content %}
+    <div class="tpl-content-wrapper">
+
+
+        <div class="row-content am-cf" id="piclist">
+
+            <div class="row am-cf" >
+                <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+                    <div class="widget am-cf">
+
+                        <div class="widget-head am-cf">
+                            <div class="widget-title am-fl">数据2d可视化</div>
+                            <div class="widget-function am-fr">
+                                <div class="am-dropdown" data-am-dropdown>
+                                    <a href="javascript:;" class="am-icon-cog am-dropdown-toggle" data-am-dropdown-toggle></a>
+                                    <ul class="am-dropdown-content">
+                                        <li><a href="javascript:;" id="addpic" style="font-size: 14px">添加图表</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            {% for pic in viewpics %}
+                <div class="am-panel am-panel-default" >
+                    <div class="am-panel-hd" style="background-color: #f2f6f9">
+                        <h4 class="am-panel-title" data-am-collapse="{parent: '#accordion', target: '#pic-{{ pic.id }}'}" style="color: #838FA1" >{{ pic.pic_name }}</h4>
+                    </div>
+                    <div id="pic-{{ pic.id }}" class="am-panel-collapse am-collapse am-in" >
+                        <div class="am-panel-bd">
+                            <div class="row am-cf">
+                                <div class="am-u-sm-12">
+                                    <div class="widget am-cf">
+                                        <div class="widget-head am-cf">
+                                            <div class="widget-title am-fl">{{ pic.pic_name }}</div>
+                                            <div class="widget-function am-fr">
+                                                <div class="am-dropdown" data-am-dropdown>
+                                                    <a href="javascript:;" class="am-icon-cog am-dropdown-toggle" data-am-dropdown-toggle></a>
+                                                    <ul class="am-dropdown-content">
+                                                        <li><a href="javascript:;" style="font-size: 14px" class="delpic" pic_id="{{ pic.id }}">删除</a></li>
+                                                        <li><a href="javascript:;" class="changepic" type_name="{{ pic.class_name }}" style="font-size: 14px" pic_id="{{ pic.id }}">修改</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="widget-body-md widget-body tpl-amendment-echarts am-fr" style="height: 450px;width: 100%" id="pic{{ pic.id }}">
+                                            <!-- 测试echarts-->
+                                            <script type="text/javascript">
+                                                function decimal(num,v)
+                                                    {
+                                                        var vv = Math.pow(10,v);
+                                                        return Math.round(num*vv)/vv;
+                                                    }
+
+                                                // 基于准备好的dom，初始化echarts实例
+                                                var myChart = echarts.init(document.getElementById('pic{{ pic.id }}'), 'white', {renderer: 'canvas'});
+                                                myChart.resize();
+                                                var pic_class = '{{ pic.class_name }}';
+                                                if(pic_class==='line'){
+                                                    if('{{ pic.data_file }}'){
+                                                        var datas = {{ dataset | safe }};
+                                                        console.log(datas);
+                                                        var dataset = datas[{{ pic.id }}];
+                                                        var lebal = {{ label | safe }}[{{ pic.id }}];
+                                                        console.log(lebal);
+                                                    }
+                                                    else{
+                                                        var dataset = [
+                                                            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                                            [120, 200, 150, 80, 70, 110, 130],
+                                                            [31, 201, 10, 180, 30, 100, 150],
+                                                        ];
+                                                        var lebal = ['name','x1','x2']
+                                                    }
+
+                                                    var seriesm = []
+                                                    for(k=1;k<dataset.length;k++){
+                                                        seriesm.push({
+                                                            data: dataset[k],
+                                                            name:lebal[k],
+                                                            type: 'line',
+                                                        },)
+                                                    }
+
+                                                    var option = {
+                                                        xAxis: {
+                                                            type: 'category',
+                                                            data: dataset[0],
+                                                            splitLine: {
+                                                                show: true,
+                                                            },
+                                                        },
+                                                        yAxis: {
+                                                            type: 'value',
+                                                            splitLine: {
+                                                                show: true,
+                                                            },
+                                                        },
+                                                        series: seriesm,
+                                                        tooltip: {
+                                                            trigger: 'axis',
+                                                            axisPointer: {
+                                                                type: 'shadow'
+                                                            },
+                                                        },
+                                                        legend: {
+                                                            orient: 'horizontal',  //'vertical'
+                                                        },
+                                                    };
+                                                }
+                                                else if(pic_class==='pie'){
+                                                    if('{{ pic.data_file }}'){
+                                                        var datas = {{ dataset | safe }};
+                                                        console.log(datas);
+                                                        var dataset = datas[{{ pic.id }}];
+                                                    }
+                                                    else{
+                                                        var dataset = [
+                                                            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                                            [120, 200, 150, 80, 70, 110, 130],
+                                                        ];
+                                                    }
+
+                                                    var datass = []
+                                                    for(k=0;k<dataset[1].length;k++){
+                                                        datass.push({
+                                                            value: dataset[1][k],
+                                                            name:dataset[0][k],
+                                                        },)
+                                                    }
+
+                                                    var option = {
+                                                        tooltip: {
+                                                            trigger: 'item'
+                                                        },
+                                                        legend: {
+                                                            top: '5%',
+                                                            left: 'center',
+                                                            type: 'scroll',
+                                                        },
+                                                        series: [
+                                                            {
+                                                                name: 'Access From',
+                                                                type: 'pie',
+                                                                radius: ['40%', '70%'],
+                                                                avoidLabelOverlap: false,
+                                                                label: {
+                                                                    show: false,
+                                                                    position: 'center'
+                                                                },
+                                                                emphasis: {
+                                                                    label: {
+                                                                        show: true,
+                                                                        fontSize: '40',
+                                                                        fontWeight: 'bold'
+                                                                    }
+                                                                },
+                                                                labelLine: {
+                                                                    show: false
+                                                                },
+                                                                data: datass,
+                                                            }
+                                                        ]
+                                                    };
+                                                }
+                                                else if(pic_class==='pie_pile'){
+                                                    if('{{ pic.data_file }}'){
+                                                        var datas = {{ dataset | safe }};
+
+                                                        var dataset = datas[{{ pic.id }}];
+                                                    }
+                                                    else{
+                                                        var dataset = [
+                                                            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                                            [120, 200, 150, 80, 70, 110, 130],
+                                                            ['xzx','cxz','cxc'],
+                                                            [123,45,234],
+                                                        ];
+                                                    }
+                                                    console.log(dataset)
+
+                                                    var label = dataset[0].concat(dataset[2])
+
+
+                                                    var datass1 = []
+                                                    for(k=0;k<dataset[1].length;k++){
+                                                        datass1.push({
+                                                            value: dataset[1][k],
+                                                            name:dataset[0][k],
+                                                        },)
+                                                    }
+                                                    var datass2 = []
+                                                    for(k=0;k<dataset[3].length;k++){
+                                                        datass2.push({
+                                                            value: dataset[3][k],
+                                                            name:dataset[2][k],
+                                                        },)
+                                                    }
+
+                                                    console.log(datass2)
+
+
+                                                    var option = {
+                                                        tooltip: {
+                                                            trigger: 'item',
+                                                            formatter: '{a} <br/>{b}: {c} ({d}%)'
+                                                        },
+                                                        legend: {
+                                                            data: label,
+                                                            type: 'scroll',
+                                                        },
+                                                        series: [
+                                                            {
+                                                                name: 'Access From',
+                                                                type: 'pie',
+                                                                selectedMode: 'single',
+                                                                radius: [0, '30%'],
+                                                                label: {
+                                                                    position: 'inner',
+                                                                    fontSize: 14
+                                                                },
+                                                                labelLine: {
+                                                                    show: false
+                                                                },
+                                                                data: datass2
+                                                            },
+                                                            {
+                                                                name: 'Access From',
+                                                                type: 'pie',
+                                                                radius: ['45%', '60%'],
+                                                                labelLine: {
+                                                                    length: 30
+                                                                },
+                                                                label: {
+                                                                    formatter: '{a|{a}}{abg|}\n{hr|}\n  {b|{b}：}{c}  {per|{d}%}  ',
+                                                                    backgroundColor: '#F6F8FC',
+                                                                    borderColor: '#8C8D8E',
+                                                                    borderWidth: 1,
+                                                                    borderRadius: 4,
+                                                                    rich: {
+                                                                        a: {
+                                                                            color: '#6E7079',
+                                                                            lineHeight: 22,
+                                                                            align: 'center'
+                                                                        },
+                                                                        hr: {
+                                                                            borderColor: '#8C8D8E',
+                                                                            width: '100%',
+                                                                            borderWidth: 1,
+                                                                            height: 0
+                                                                        },
+                                                                        b: {
+                                                                            color: '#4C5058',
+                                                                            fontSize: 14,
+                                                                            fontWeight: 'bold',
+                                                                            lineHeight: 33
+                                                                        },
+                                                                        per: {
+                                                                            color: '#fff',
+                                                                            backgroundColor: '#4C5058',
+                                                                            padding: [3, 4],
+                                                                            borderRadius: 4
+                                                                        }
+                                                                    }
+                                                                },
+                                                                data: datass1
+                                                            }
+                                                        ]
+                                                    };
+                                                }
+                                                else if(pic_class==='bar'){
+                                                    if('{{ pic.data_file }}'){
+                                                        var datas = {{ dataset | safe }};
+                                                        console.log(datas);
+                                                        var dataset = datas[{{ pic.id }}];
+                                                        var lebal = {{ label | safe }}[{{ pic.id }}];
+                                                        console.log(lebal);
+                                                    }
+                                                    else{
+                                                        var lebal = ['name','x1','x2']
+                                                        var dataset = [
+                                                            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                                            [120, 200, 150, 80, 70, 110, 130],
+                                                            [31, 201, 10, 180, 30, 100, 150],
+                                                        ];
+                                                    }
+
+
+                                                    var seriesm = []
+                                                    for(k=1;k<dataset.length;k++){
+                                                        seriesm.push({
+                                                            data: dataset[k],
+                                                            name:lebal[k],
+                                                            type: 'bar',
+                                                            showBackground: true,
+                                                            backgroundStyle: {
+                                                                color: 'rgba(180, 180, 180, 0.2)'
+                                                            }
+                                                        },)
+                                                    }
+
+                                                    var option = {
+                                                        xAxis: {
+                                                            type: 'category',
+                                                            data: dataset[0]
+                                                        },
+                                                        yAxis: {
+                                                            type: 'value'
+                                                        },
+                                                        series: seriesm,
+                                                        legend: {},
+                                                        tooltip: {
+                                                            trigger: 'axis', //坐标轴触发，主要在柱状图，折线图等会使用类目轴的图表中使用
+                                                            axisPointer: {// 坐标轴指示器，坐标轴触发有效
+                                                                type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+                                                            }
+                                                        },
+                                                    };
+                                                }
+                                                else if(pic_class==='bar_pile'){
+                                                    if('{{ pic.data_file }}'){
+                                                        var datas = {{ dataset | safe }};
+                                                        console.log(datas);
+                                                        var dataset = datas[{{ pic.id }}];
+                                                        var lebal = {{ label | safe }}[{{ pic.id }}];
+                                                        console.log(lebal);
+                                                    }
+                                                    else{
+                                                        var dataset = [
+                                                            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                                            [120, 200, 150, 80, 70, 110, 130],
+                                                            [31, 201, 10, 180, 30, 100, 150],
+                                                        ];
+                                                         var lebal = ['name','x1','x2']
+                                                    }
+
+
+                                                    var seriesm = []
+                                                    for(k=1;k<dataset.length;k++){
+                                                        seriesm.push({
+                                                            name: lebal[k],
+                                                            type: 'bar',
+                                                            stack: 'total',
+                                                            {#label: {show: true},#}
+                                                            emphasis: {
+                                                                focus: 'series'
+                                                            },
+                                                            data: dataset[k]
+                                                        },)
+                                                    }
+
+                                                    var option = {
+                                                        tooltip: {
+                                                            trigger: 'axis',
+                                                            axisPointer: {
+                                                                // Use axis to trigger tooltip
+                                                                type: 'shadow' // 'shadow' as default; can also be 'line' or 'shadow'
+                                                            }
+                                                        },
+                                                        legend: {},
+                                                        grid: {
+                                                            left: '3%',
+                                                            right: '4%',
+                                                            bottom: '3%',
+                                                            containLabel: true
+                                                        },
+                                                        xAxis: {
+                                                            type: 'value'
+                                                        },
+                                                        yAxis: {
+                                                            type: 'category',
+                                                            data: dataset[0]
+                                                        },
+                                                        series: seriesm
+                                                    };
+                                                }
+                                                else if(pic_class==='box'){
+                                                    if('{{ pic.data_file }}'){
+                                                        var datas = {{ dataset | safe }};
+                                                        console.log(datas);
+                                                        var dataset = datas[{{ pic.id }}];
+                                                        var lebal = {{ label | safe }}[{{ pic.id }}];
+                                                    }
+                                                    else{
+                                                        var lebal = ['x1','x2'];
+                                                        var dataset = [
+                                                            [18, 18, 27, 28, 28, 15, 24, 26, 18, 6, 2, 12, 17, 10, 1, 5, 13, 20, 15, 9, 5, 13, 15, 12, 12, 9, 7, 1, 5, 9, 14, 13, 7, 11, 8, 7, 5, 8, 13, 10, 6, 4, 8, 13, 12, 20, 15, 9, 6, 3, 6, 13, 16, 16, 7, 5, 10, 7, 7, 6, 4, 8, 10, 8, 11, 11, 12, 16],
+                                                            [43, 49, 50, 50, 48, 47, 51, 31, 30, 39, 37, 37, 38, 29, 62, 78, 65, 70, 68, 65, 68, 70, 63, 60, 57, 46, 45, 49, 52, 40, 35, 32, 41, 37, 19, 28, 28, 23, 30, 48, 37, 29, 28, 35, 27, 39, 49, 51, 54, 46, 50, 36, 39, 38, 32, 34, 28, 24, 31, 24],
+                                                        ];
+                                                    }
+                                                    var data = echarts.dataTool.prepareBoxplotData(dataset);
+                                                    var option = {
+                                                        title: [
+                                                            {
+                                                                text: 'upper: Q3 + 1.5 * IQR \nlower: Q1 - 1.5 * IQR',
+                                                                borderColor: '#999',
+                                                                borderWidth: 1,
+                                                                textStyle: {
+                                                                    fontSize: 14
+                                                                },
+                                                                left: '10%',
+                                                                top: '90%'
+                                                            }
+                                                        ],
+                                                        tooltip: {
+                                                            trigger: 'item',
+                                                            axisPointer: {
+                                                                type: 'shadow'
+                                                            }
+                                                        },
+                                                        grid: {
+                                                            left: '10%',
+                                                            right: '10%',
+                                                            bottom: '15%'
+                                                        },
+                                                        legend: {},
+                                                        xAxis: {
+                                                            type: 'category',
+                                                            boundaryGap: true,
+                                                            nameGap: 30,
+                                                            splitArea: {
+                                                                show: false
+                                                            },
+                                                            data: lebal,
+                                                            splitLine: {
+                                                                show: false
+                                                            }
+                                                        },
+                                                        yAxis: {
+                                                            type: 'value',
+                                                            splitArea: {
+                                                                show: true
+                                                            }
+                                                        },
+                                                        series: [
+                                                            {
+                                                                name: 'boxplot',
+                                                                type: 'boxplot',
+                                                                data: data.boxData,
+                                                                tooltip: {
+                                                                    formatter: function (param) {
+                                                                        return [
+                                                                            'Experiment ' + param.name + ': ',
+                                                                            'upper: ' + decimal(param.data[5],2),
+                                                                            'Q3: ' + decimal(param.data[4],2),
+                                                                            'median: ' + decimal(param.data[3],2),
+                                                                            'Q1: ' + decimal(param.data[2],2),
+                                                                            'lower: ' + decimal(param.data[1],2)
+                                                                        ].join('<br/>');
+                                                                    }
+                                                                }
+                                                            },
+                                                            {
+                                                                name: 'outlier',
+                                                                type: 'scatter',
+                                                                data: data.outliers
+                                                            }
+                                                        ]
+                                                    };
+                                                }
+                                                else if(pic_class==='radar'){
+                                                    if('{{ pic.data_file }}'){
+                                                        var datas = {{ dataset | safe }};
+                                                        console.log(datas);
+                                                        var dataset = datas[{{ pic.id }}];
+                                                        var lebal = {{ label | safe }}[{{ pic.id }}];
+                                                        console.log('radar');
+                                                        console.log(lebal);
+                                                        console.log(dataset);
+                                                    }
+                                                    else{
+                                                        var lebal = ['name','max','Allocated Budget','Actual Spending','new'];
+                                                        var dataset = [
+                                                            ['Sales', 'Administration', 'Information Technology', 'Customer Support', 'Development', 'Marketing'],
+                                                            [6500, 16000, 30000, 38000, 52000, 25000],
+                                                            [4200, 3000, 20000, 35000, 50000, 18000],
+                                                            [5000, 14000, 28000, 26000, 42000, 21000],
+                                                            [500, 1400, 2800, 2800, 4209, 2100],
+                                                        ];
+                                                    }
+
+
+                                                    var seriesm = []
+                                                    for(k=2;k<dataset.length;k++){
+                                                        seriesm.push({
+                                                            name: lebal[k],
+                                                            value:dataset[k],
+                                                            emphasis: {
+                                                                label: {
+                                                                    show: true,
+                                                                    color: '#fff',
+                                                                    fontSize: 15,
+                                                                    formatter: '{c}',       // 鼠标悬浮时展示数据加上单位
+                                                                    backgroundColor: '#9a60b4',
+                                                                    borderRadius: 2,
+                                                                    padding: 3,
+                                                                    {#shadowBlur: 3#}
+                                                                }
+                                                            }
+
+                                                        },)
+                                                    }
+
+                                                    var maxs = []
+                                                    for(k=0;k<dataset[1].length;k++){
+                                                        maxs.push({
+                                                            name: dataset[0][k],
+                                                            max: dataset[1][k]
+                                                        },)
+                                                    }
+
+
+                                                    var option = {
+                                                        legend: {
+                                                            type: 'scroll',
+                                                        },
+                                                        radar: {
+                                                            // shape: 'circle',
+                                                            indicator: maxs
+                                                        },
+                                                        series: [
+                                                            {
+                                                                name: 'Budget vs spending',
+                                                                type: 'radar',
+                                                                data: seriesm
+                                                            }
+                                                        ]
+                                                    };
+                                                }
+                                                option && myChart.setOption(option);
+                                            </script>
+                                            <!-- 测试echarts end-->
+                                            </li>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+    </div>
+{% endblock content %}
+{% block script_or_other %}
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt">
+    <div class="am-modal-dialog ">
+        <div class="am-modal-hd">选择图表类型</div>
+        <div class="am-modal-bd">
+
+            <br>
+            <table class="am-table">
+                <tr>
+                    <td>
+                        <input type="radio" name="types" value="line" checked>
+                        折线图
+                    </td>
+                    <td>
+                        <input type="radio" name="types" value="bar" >
+                        柱状图
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="types" value="bar_pile" >
+                        堆叠柱状图
+                    </td>
+                    <td>
+                        <input type="radio" name="types" value="pie" >
+                        饼图
+                    </td>
+
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="types" value="pie_pile" >
+                        双层饼图
+                    </td>
+                    <td>
+                        <input type="radio" name="types" value="box" >
+                        箱线图
+                    </td>
+
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="types" value="radar" >
+                        雷达图
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>图片名称</td>
+                    <td><input type="text" class="am-modal-prompt-input"></td>
+                </tr>
+            </table>
+
+
+        </div>
+        <div class="am-modal-footer">
+            <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+            <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+        </div>
+    </div>
+</div>
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt2">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">上传数据</div>
+            <div class="am-modal-bd">
+
+                <br>
+                <div class="am-form-group am-form-file">
+                    <button type="button" class="am-btn am-btn-danger am-btn-sm">
+                        <i class="am-icon-cloud-upload"></i> 选择要上传的文件</button>
+                    <input id="doc-form-file" type="file" multiple>
+                </div>
+                <div id="file-list"></div>
+
+
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+
+    {% csrf_token %}
+    <script type="text/javascript">
+        function bind(obj, eventStr, callback) {
+            if (obj.addEventListener) {
+                //大部分浏览器兼容的方式
+                obj.addEventListener(eventStr, callback, false);
+            } else {
+                /*
+                 * this是谁由调用方式决定
+                 * callback.call(obj)
+                 */
+                //IE8及以下
+                obj.attachEvent("on" + eventStr, function () {
+                    //在匿名函数中调用回调函数
+                    callback.call(obj);
+                });
+            }
+        }
+
+        window.onload = function () {
+             $('#2d_flag').attr('class','active')
+            $(function() {
+                $('#doc-form-file').on('change', function() {
+                    var fileNames = '';
+                    $.each(this.files, function() {
+                        fileNames += '<span class="am-badge">' + this.name + '</span> ';
+                    });
+                    $('#file-list').html(fileNames);
+                });
+            });
+
+            var addpic = document.getElementById('addpic');
+            bind(addpic,'click',function (){
+                $('#my-prompt').modal({
+                    relatedTarget: this,
+                    onConfirm: function (options) {
+                        var pic_name = String(options.data);
+                        if (pic_name.length==0){
+                            alert('请输入图片名称');
+                            return false
+                        }
+                        var type = document.getElementsByName('types')
+                        for (var j =0;j<type.length;j++){
+                            if(type[j].checked){
+                                var name_type = type[j].value;
+                            }
+                        }
+
+                        console.log(typeof name_type);
+                        console.log( name_type);
+                        console.log(name_type)
+                        $.ajax({
+                            type: 'POST',
+                            url: '/view/pic2d/',
+                            data: {
+                                csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                                name_type:name_type,
+                                pic_name:pic_name
+                            },
+                            success: function (data) {
+                                console.log('ajax post success')
+                                location.reload();
+                            },
+                            error:function (XMLHttpRequest, textStatus, errorThrown){
+                                console.log('ajax post error')
+                                // 状态码
+                                console.log('状态码:'+XMLHttpRequest.status);
+                                // 状态
+                                console.log("状态:"+XMLHttpRequest.readyState);
+                                // 错误信息
+                                console.log("错误信息:"+textStatus);
+                            }
+                        })
+
+
+                    },
+                    onCancel: function (data) {
+                    }
+                })
+
+            });
+
+            var changepic = document.getElementsByClassName('changepic');
+            for(var i=0;i<changepic.length;i++){
+                var id=changepic[i].getAttribute('pic_id')
+                var type_name=changepic[i].getAttribute('type_name')
+                changepic[i].pic_id = id;
+                changepic[i].type_name = type_name;
+                bind(changepic[i],'click',function (){
+                    var id = this.pic_id;
+                    var type_name = this.type_name;
+                    $('#my-prompt2').modal({
+                        relatedTarget: this,
+                        onConfirm: function (options) {
+                            var file = $("#doc-form-file").get(0).files[0];
+                            if (file) {
+                                console.log('有')
+                                console.log(file.name)
+                                if (file.name.indexOf("csv") !== -1 || file.name.indexOf("xls") !== -1){
+                                    var fd = new FormData();
+                                    fd.append("upfile", file);
+                                    fd.append("id", id);
+                                    fd.append("type_name", type_name);
+                                    fd.append("csrfmiddlewaretoken", $('[name="csrfmiddlewaretoken"]').val())
+                                    $.ajax({
+                                        url: "/view/pic2d_change/",
+                                        type: "POST",
+                                        processData: false,
+                                        contentType: false,
+                                        data: fd,
+                                        success: function (d) {
+                                            console.log('ajax post success');
+                                            location.reload();
+                                        },
+                                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                            console.log('ajax post error')
+                                            // 状态码
+                                            console.log('状态码:' + XMLHttpRequest.status);
+                                            // 状态
+                                            console.log("状态:" + XMLHttpRequest.readyState);
+                                            // 错误信息
+                                            console.log("错误信息:" + textStatus);
+                                        }
+                                    })}
+                                else{
+                                    alert('请上传正确格式的文件（csv,xls,xlsx）')
+                                }
+                            }
+
+                            else {
+                                alert('请上传文件')
+                            }
+                        },
+                        onCancel: function (data) {
+                        }
+                    })
+
+                })
+            }
+
+            var delpic = document.getElementsByClassName('delpic');
+            for(var m=0;m<delpic.length;m++){
+                var id=delpic[m].getAttribute('pic_id')
+                delpic[m].pic_id = id;
+                bind(delpic[m],'click',function (){
+                    var id = this.pic_id;
+                    $.ajax({
+                        type: 'POST',
+                        url: '/view/pic2d_del/',
+                        data: {
+                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                            id: id,
+                        },
+                        success: function (data) {
+                            console.log('ajax post success')
+                            location.reload();
+                        },
+                        error:function (XMLHttpRequest, textStatus, errorThrown){
+                            console.log('ajax post error')
+                            // 状态码
+                            console.log('状态码:'+XMLHttpRequest.status);
+                            // 状态
+                            console.log("状态:"+XMLHttpRequest.readyState);
+                            // 错误信息
+                            console.log("错误信息:"+textStatus);
+                        }
+                    })
+
+                })
+            }
+
+
+        }
+    </script>
+{% endblock script_or_other %}
+
+
+
+
+
+
+

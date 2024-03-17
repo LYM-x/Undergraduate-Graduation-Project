@@ -1,0 +1,606 @@
+{% extends 'model/base.html' %}
+{% block headadd %}
+    <link rel="stylesheet" href="/static/codemirror/theme/darcula.css">
+    <link rel="stylesheet" href="/static/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="/static/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="/static/codemirror/addon/fold/foldgutter.css">
+    <link rel="stylesheet" href="/static/codemirror/addon/hint/show-hint.css">
+    <link rel="stylesheet" href="/static/codemirror/addon/lint/lint.css">
+    <script src="/static/codemirror/mode/python/python.js"></script>
+    <script src="/static/codemirror/lib/codemirror.js"></script>
+    <script src="/static/codemirror/lib/codemirror.js"></script>
+    <script src="/static/codemirror/addon/comment/comment.js"></script>
+    <script src="/static/codemirror/addon/selection/active-line.js"></script>
+    <script src="/static/codemirror/keymap/sublime.js"></script>
+    <script src="/static/codemirror/addon/hint/show-hint.js"></script>
+    <script src="/static/codemirror/mode/python/python.js"></script>
+    <script src="/static/codemirror/addon/fold/foldcode.js"></script>
+    <script src="/static/codemirror/addon/fold/foldgutter.js"></script>
+    <script src="/static/codemirror/addon/fold/brace-fold.js"></script>
+    <script src="/static/codemirror/addon/fold/indent-fold.js"></script>
+    <script src="/static/codemirror/addon/fold/comment-fold.js"></script>
+    <script src="/static/codemirror/addon/edit/closebrackets.js"></script>
+    <script src="/static/codemirror/addon/edit/matchbrackets.js"></script>
+{% endblock headadd %}
+{% block content %}
+    <div class="tpl-content-wrapper">
+
+
+        <div class="row-content am-cf">
+
+            <div class="row">
+
+                <div class="am-u-sm-12 am-u-md-12 am-u-lg-12">
+                    <div class="widget am-cf">
+
+                        <div class="widget-head am-cf">
+                            <div class="widget-title am-fl">GCN_LSTM组合模型</div>
+                            <div class="widget-function am-fr">
+{#                                <a href="javascript:;" class="am-icon-cog"></a>#}
+                            </div>
+                        </div>
+                        <div class="widget-body  am-fr">
+                            <div class="am-g doc-am-g">
+                                <div class="am-u-sm-6 am-u-md-4 am-u-lg-3">
+                                    <figure data-am-widget="figure" class="am am-figure am-figure-default "   data-am-figure="{  pureview: 'true' }">
+                                        {% load static %}
+                                        <img src="{% static 'model/GCN.jpg' %}" data-rel="{% static 'model/GCN.jpg' %}" alt="lstm"/>
+                                        <figcaption class="am-figure-capition-btm">
+                                            GCN结构图
+                                        </figcaption>
+                                    </figure>
+                                </div>
+                                <div class="am-u-sm-6 am-u-md-8 am-u-lg-9">传统的卷积神经网络在文本和图像领域带来提升，但是它仅能处理欧氏空间数据．而同时，一种非欧空间数据：图数据，因其普遍存在性逐渐受到关注。GCN（图卷积神经网络）借助卷积方式在图数据上进行特征提取，主要包括卷积算子和池化算子的构建。。。。
+                                    <a href="https://zhuanlan.zhihu.com/p/71200936" class="am-icon-link"></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="am-panel-group" id="accordion">
+                            <div class="am-panel am-panel-default">
+                                <div class="am-panel-hd" style="background-color: #f2f6f9">
+                                    <p id="edit_code_win">
+                                        <span style="font-size: large;color: #7c8798;font-weight: bold"  data-am-collapse="{parent: '#accordion', target: '#do-not-say-1'}">
+                                        模型代码</span>
+                                        <a href="javascript:;" id="edit_code" class="am-icon-edit" style="margin-left: 10px" ></a>
+                                    </p>
+                                </div>
+                                <div id="do-not-say-1" class="am-panel-collapse am-collapse am-in">
+                                    <div class="am-panel-bd" >
+                                         <textarea id="code">
+class GCN(torch.nn.Module):
+    def __init__(self, in_channels1, in_channels2, hidden_channels, out_channels, numgcnE, target):
+        super(GCN, self).__init__()
+        self.target = target
+        self.gcn1 = GCNConv(in_channels1, hidden_channels)
+        self.gcn2 = GCNConv(hidden_channels, hidden_channels)
+        self.lstm1 = LSTM(in_channels2, hidden_channels, batch_first=True)
+        self.lstm2 = LSTM(hidden_channels, hidden_channels, batch_first=True)
+        self.flatten1 = Flatten(start_dim=0, end_dim=-1)
+        self.model1 = Sequential(
+            Linear((numgcnE + 1) * hidden_channels, int(((numgcnE + 1) * hidden_channels) / 2)),
+            Linear(int(((numgcnE + 1) * hidden_channels) / 2), out_channels),
+        )
+
+    def forward(self, data0: Tensor, data1: Tensor, edge_index: Tensor) -> Tensor:
+        data1 = self.gcn1(data1, edge_index).relu()
+        data1 = self.gcn2(data1, edge_index).relu()
+        data1 = self.flatten1(data1[self.target])
+        out, (data2, c) = self.lstm1(data0)
+        out, (data2, c) = self.lstm2(data2)
+        data2 = data2.squeeze(dim=0).squeeze(dim=0)
+        data = torch.cat((data1, data2))
+        output = self.model1(data)
+
+        return output
+                                            </textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="am-panel am-panel-default">
+                                <div class="am-panel-hd" style="background-color: #f2f6f9">
+                                    <p style="font-size: large;color: #7c8798;font-weight: bold"  data-am-collapse="{parent: '#accordion', target: '#do-not-say-2'}">
+                                        参数
+                                    </p>
+                                </div>
+                                <div id="do-not-say-2" class="am-panel-collapse am-collapse">
+                                    <div class="am-panel-bd">
+                                        <form class="am-form-horizontal" role="form" id="gcn_lstm_form" method="post" action="/model/model2_back/">
+                                            {% csrf_token %}
+                                            <div class="am-form-group">
+                                                <input type='text' class="am-form-field " name="lr" style="width: 15%" placeholder="学习率">
+                                            </div>
+                                            <div class="am-form-group">
+                                                <input type='number' class="am-form-field" name="win"  style="width: 15%"  placeholder="滑动窗口数">
+                                            </div>
+                                            <div class="am-form-group">
+                                                <input type='number' class="am-form-field" name="pren"  style="width: 15%"  placeholder="测试步数">
+                                            </div>
+                                            <div class="am-form-group">
+                                                <input type='number' class="am-form-field" name="epoch"  style="width: 15%"  placeholder="epoch">
+                                            </div>
+                                            <div class="am-form-group">
+                                                <input type='number' class="am-form-field" name="hid"  style="width: 15%"  placeholder="隐藏层参数">
+                                            </div>
+
+
+                                            <div class="am-form-group">
+                                            时间序列文件：
+                                                <select data-am-selected="{maxHeight: 200} " name="file_data0" id="select_file">
+                                                    {% for file in files %}
+                                                        <option value="{{ file.id }}">{{ file.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                         <div class="am-form-group">
+                                         节点特征文件：
+                                                <select data-am-selected="{maxHeight: 200} " name="file_data1">
+                                                    {% for file in files %}
+                                                        <option value="{{ file.id }}">{{ file.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+
+
+                                            </div>
+                                            <div class="am-form-group">
+                                                <input type='number' class="am-form-field" name="target"  style="width: 15%"  placeholder="目标参数">
+                                            </div>
+
+                                              <div class="am-form-group">
+                                              节点连接关系文件：
+                                                <select data-am-selected="{maxHeight: 200} " name="file_edge">
+                                                    {% for file in files %}
+                                                        <option value="{{ file.id }}">{{ file.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+
+                                        <input type = "text" id="time_col" style = "display:none" class="am-form-field" name="time_col"  >
+                                            <input type = "text" id="pre_col"  style = "display:none" class="am-form-field" name="pre_col"  >
+                                        <input type = "text" id="pic_name"  style = "display:none" class="am-form-field" name="pic_name"  >
+                                        <textarea id="code_input" style = " display:none" class="am-form-field" name="code_input"></textarea>
+
+                                            <button type="button" class="am-btn am-btn-success btn-loading-example" id="submit_bn"  data-am-loading="{spinner: 'circle-o-notch', loadingText: '运行中...', resetText: '训练完成'}">训练</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="am-panel am-panel-default">
+                                <div class="am-panel-hd" style="background-color: #f2f6f9">
+                                    <p  style="font-size: large;color: #7c8798;font-weight: bold" data-am-collapse="{parent: '#accordion', target: '#do-not-say-3'}">
+                                        训练结果</p>
+                                </div>
+                                <div id="do-not-say-3" class="am-panel-collapse am-collapse">
+                                    <div class="am-panel-bd">
+
+                                        <div class="am-scrollable-horizontal">
+                                            <table width="100%"
+                                                   class="am-table "
+                                                   id="example-r">
+                                                <thead>
+                                                <tr>
+                                                    <th>模型名称</th>
+                                                    <th>loss图</th>
+                                                    <th>准确率图</th>
+                                                    <th>评估指标</th>
+                                                    <th>操作</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+
+                                                {% for model in modelsx %}
+                                                    <tr class="gradeX">
+                                                        <td>{{ model.model_name }}</td>
+                                                        <td>
+                                                            <div class="tpl-table-black-operation">
+                                                                <a href="javascript:;" class="look_loss" path="{{ model.loss_pic }}">
+                                                                    <i class="am-icon-pencil"></i> 查看
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="tpl-table-black-operation">
+                                                                <a href="javascript:;" class="look_acc" path="{{ model.acc_pic }}">
+                                                                    <i class="am-icon-pencil"></i> 查看
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="tpl-table-black-operation">
+                                                                <a href="javascript:;" class="look_index" index="{{ model.value_index }}">
+                                                                    <i class="am-icon-pencil"></i> 查看
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="tpl-table-black-operation">
+                                                                <a href="/model/model2_down?down={{ model.id }}"
+                                                                   class="tpl-table-black-operation">
+                                                                    <i class="am-icon-download"></i> 下载
+                                                                </a>
+                                                                    <a href="javascript:;"
+                                                                   class="view" mid="{{ model.id }}">
+                                                                    <i class="am-icon-bar-chart"></i> 可视化
+                                                                </a>
+                                                                <a href="/model/models_del?delete={{ model.id }}"
+                                                                   class="tpl-table-black-operation-del">
+                                                                    <i class="am-icon-trash"></i> 删除
+                                                                </a>
+                                                            </div>
+                                                        </td>
+
+                                                    </tr>
+                                                {% endfor %}
+
+
+
+                                                <!-- more data -->
+                                                </tbody>
+                                            </table>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+{% endblock content %}
+{% block script_or_other %}
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt1">
+    <div class="am-modal-dialog ">
+        <div class="am-modal-hd">loss图</div>
+        <div class="am-modal-bd">
+                <img id="loss" src="" style="height: 100%;width: 100%">
+        </div>
+        <div class="am-modal-footer">
+            <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+        </div>
+    </div>
+</div>
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt2">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">acc图</div>
+            <div class="am-modal-bd">
+                    <img id="acc" src="" style="height: 100%;width: 100%">
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+            </div>
+        </div>
+    </div>
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt3">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">指标</div>
+            <div class="am-modal-bd">
+                <br>
+                <table class="am-table ">
+                        <tr>
+                            <td>MAE</td>
+                            <td id="MAE"></td>
+                        </tr>
+                     <tr>
+                            <td>RMSE</td>
+                            <td id="RMSE"></td>
+                        </tr>
+                     <tr>
+                            <td>Hugloss</td>
+                            <td id="Hugloss"></td>
+                        </tr>
+                     <tr>
+                            <td>R2</td>
+                            <td id="R2"></td>
+                        </tr>
+                </table>
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+            </div>
+        </div>
+    </div>
+     <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompt4">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">选择可视化数据</div>
+            <div class="am-modal-bd">
+                <table class="am-table ">
+                     <tr>
+                        <td>
+                            <input type="radio" name="view2" value="line" checked>
+                            折线图
+                        </td>
+                        <td>
+                            <input type="radio" name="view2" value="bar">
+                            柱状图
+                        </td>
+                           <td>
+                            <input type="radio" name="view2" value="radar">
+                            雷达图
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                 <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+    <div class="am-modal am-modal-prompt " tabindex="-1" id="my-prompts">
+        <div class="am-modal-dialog ">
+            <div class="am-modal-hd">选择训练数据</div>
+            <div class="am-modal-bd">
+                <br>
+                <table class="am-table ">
+                    <tr>
+                        <td>
+                            <div class="am-form-group" id="time">
+                                <label class="am-radio-inline">
+                                    时间列
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="am-form-group"  id="pre">
+                                <label class="am-radio-inline">
+                                    预测列
+                                </label>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label class="am-radio-inline">模型名称:&nbsp&nbsp&nbsp&nbsp&nbsp</label><input type="text" name="pic_namex" class="am-modal-prompt-input" style="width: 55%" placeholder="默认：model_模型类别_模型训练时间"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>提交</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        function bind(obj, eventStr, callback) {
+            if (obj.addEventListener) {
+                //大部分浏览器兼容的方式
+                obj.addEventListener(eventStr, callback, false);
+            } else {
+                /*
+                 * this是谁由调用方式决定
+                 * callback.call(obj)
+                 */
+                //IE8及以下
+                obj.attachEvent("on" + eventStr, function () {
+                    //在匿名函数中调用回调函数
+                    callback.call(obj);
+                });
+            }
+        }
+
+
+        window.onload = function () {
+            $('#model2_flag').attr('class','active')
+            var $btn = $('.btn-loading-example')
+            var train = '{{ train }}'
+            console.log(train)
+            if (train=='yes'){
+                $btn.button('loading');
+            }
+            else if(train=='done') {
+                $btn.button('reset');
+            }
+
+             var editor=CodeMirror.fromTextArea(document.getElementById("code"),{
+                mode:"python", //实现Java代码高亮
+                lineNumbers:true,
+                // theme:"darcula",
+                matchBrackets: true,
+                keyMap: "sublime", // 快键键风格
+                lineNumbers: true, // 显示行号
+                {#smartIndent: true, // 智能缩进#}
+                {#indentUnit: 4, // 智能缩进单位为4个空格长度#}
+                {#indentWithTabs: true, // 使用制表符进行智能缩进#}
+                lineWrapping: true, //
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
+                foldGutter: true, // 启用行槽中的代码折叠
+                autofocus: true, // 自动聚焦
+                matchBrackets: true, // 匹配结束符号，比如"]、}"
+                autoCloseBrackets: true, // 自动闭合符号
+                styleActiveLine: true, // 显示选中行的样式
+                readOnly: true
+            });
+
+            $('#edit_code').click(function (){
+                $('#edit_code').attr('style','margin-left: 10px;color:green')
+                editor.setOption('readOnly',false)
+                $('#edit_code_win').append('<a style="margin-left: 10px" id="edit_model1"><i class="am-icon-download"></i></a>')
+                $('#edit_model1').bind('click',function (){
+
+                    console.log(editor.getValue())
+                    $('#code_input').val(editor.getValue());
+                    editor.setValue(editor.getValue())
+                    alert('修改代码成功')
+                    $('#edit_model1').remove()
+                })
+            })
+
+            var su_bn = document.getElementById('submit_bn');
+            bind(su_bn,'click',function (){
+                console.log($('#code_input').val())
+                console.log('----------------')
+                var selct_file = document.getElementById('select_file')
+                var index = selct_file.selectedIndex; // 选中索引
+                var value = selct_file.options[index].value; // 选中值
+                $.get('/model/models_get', {file:value},function (data,status){
+                    if(status=='success'){
+                        data = JSON.parse(data)['label'];
+                        console.log(data);
+                        $('#time').html('<label class="am-radio-inline">\
+                                    时间列：\
+                                </label>')
+                        $('#pre').html('<label class="am-radio-inline">\
+                                    预测列：\
+                                </label>')
+                        for(var i=0;i<data.length;i++){
+                            $('#time').append('<label class="am-radio-inline">\
+                                    <input type="radio" name="radio1" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                                </label>')
+                            $('#pre').append('<label class="am-radio-inline">\
+                                    <input type="radio" name="radio2" value="'+String(i)+'" data-am-ucheck>'+data[i]+'\
+                                </label>')
+                        }
+                        $('#my-prompts').modal({
+                            relatedTarget: this,
+                            onConfirm: function (e) {
+                                var time = $("input[name=radio1]:checked").val();
+                                var pre = $("input[name=radio2]:checked").val();
+                                var name = $("input[name=pic_namex]").val();
+                                if (!time || !pre){
+                                     alert('请选择列');
+                                }
+                                else if(time==pre){
+                                    alert('时间序列和预测序列不能为同一列');
+                                }
+                                else{
+                                    $('#time_col').val(time);
+                                    $('#pre_col').val(pre);
+                                    $('#pic_name').val(name);
+                                    var form = document.getElementById('gcn_lstm_form');
+                                    form.submit();
+                                }
+                            },
+                            onCancel: function () {
+                            }
+                        });
+                    }
+                })
+            })
+
+            var a01 = document.getElementsByClassName("look_loss");
+            for (var i = 0; i < a01.length; i++) {
+                var b0 = a01[i];
+                b0.path = b0.getAttribute("path")
+                 bind(b0, "click", function () {
+                     var path = this.path
+                     console.log(path)
+                     console.log(typeof path)
+                     var loss = document.getElementById("loss");
+                     loss.src = '/media/'+ path;
+                     $('#my-prompt1').modal({
+                        relatedTarget: this,
+                        onConfirm: function (e) {
+                        },
+                        onCancel: function () {
+                        },
+                    });
+                 })
+            }
+
+            var a01 = document.getElementsByClassName("look_acc");
+            for (var i = 0; i < a01.length; i++) {
+                var b0 = a01[i];
+                b0.path = b0.getAttribute("path")
+                 bind(b0, "click", function () {
+                     var path = this.path
+                     console.log(path)
+                     console.log(typeof path)
+                     var loss = document.getElementById("acc");
+                     loss.src = '/media/'+ path;
+                     $('#my-prompt2').modal({
+                        relatedTarget: this,
+                        onConfirm: function (e) {
+                        },
+                        onCancel: function () {
+                        },
+                    });
+                 })
+            }
+
+            var a01 = document.getElementsByClassName("look_index");
+            for (var i = 0; i < a01.length; i++) {
+                var b0 = a01[i];
+                b0.index = b0.getAttribute("index")
+                 bind(b0, "click", function () {
+                     var index = this.index
+                     index = index.split(',')
+                     console.log(index)
+                     console.log(typeof index)
+                     var loss = document.getElementById("MAE");
+                     loss.innerText= index[0]
+                     var loss = document.getElementById("RMSE");
+                     loss.innerText= index[1]
+                     var loss = document.getElementById("Hugloss");
+                     loss.innerText= index[2]
+                     var loss = document.getElementById("R2");
+                     loss.innerText= index[3]
+                     $('#my-prompt3').modal({
+                        relatedTarget: this,
+                        onConfirm: function (e) {
+                        },
+                        onCancel: function () {
+                        },
+                    });
+                 })
+            }
+
+             var v01 = document.getElementsByClassName("view");
+        for (var i = 0; i < v01.length; i++) {
+            var b0 = v01[i];
+            b0.mid = b0.getAttribute("mid")
+            bind(b0, "click", function () {
+                var mid = this.mid
+                $('#my-prompt4').modal({
+                    relatedTarget: this,
+                    onConfirm: function (e) {
+                            var type1 = document.getElementsByName('view2')
+                            for (var j =0;j<type1.length;j++){
+                                if(type1[j].checked){
+                                    var pic_type = type1[j].value;
+                                }
+                            }
+                         $.ajax({
+                        type: 'POST',
+                        url: '/view/model/',
+                        data: {
+                            csrfmiddlewaretoken: $('[name="csrfmiddlewaretoken"]').val(),
+                            pic_type:pic_type,
+                            mid:mid
+                        },
+                        success: function (data) {
+                            console.log('ajax post success')
+                            window.location.href = '/view/pic2d';
+                        },
+                        error:function (XMLHttpRequest, textStatus, errorThrown){
+                            console.log('ajax post error')
+                            // 状态码
+                            console.log('状态码:'+XMLHttpRequest.status);
+                            // 状态
+                            console.log("状态:"+XMLHttpRequest.readyState);
+                            // 错误信息
+                            console.log("错误信息:"+textStatus);
+                        }
+                    })
+
+                    },
+                    onCancel: function () {
+                    },
+                });
+            })
+        }
+
+        }
+    </script>
+{% endblock script_or_other %}
+
+
+
+
+
